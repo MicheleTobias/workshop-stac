@@ -4,6 +4,8 @@
 # rstac Example: https://brazil-data-cube.github.io/rstac/
 # rstac Documentation: https://brazil-data-cube.github.io/rstac/reference/index.html 
 # r-spatial STAC: https://r-spatial.org/r/2021/04/23/cloud-based-cubes.html
+# stac spec tutorial on querying: https://stacspec.org/en/tutorials/2-using-rstac-and-cql2-to-query-stac-api/
+# stac spec tutorial on downloading data: https://stacspec.org/en/tutorials/1-download-data-using-r/
 
 
 
@@ -30,6 +32,7 @@ landsat_collections <- get_request(collections(landsat_stac))
 
 
 #set up the search parameters
+#   Info on Landsat collections: https://stacindex.org/catalogs/usgs-landsat-collection-2-api#/
 search_landsat <- stac_search(
   q = landsat_stac,
   collections = "landsat-c2l2-sr",
