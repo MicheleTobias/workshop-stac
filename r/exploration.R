@@ -11,11 +11,20 @@
 
 # SET UP -------------------------------------------------------------------
 
+# get access to the data:
+#   1. Sign up for an Earthdata Login account: https://urs.earthdata.nasa.gov/
+#   2. NASA uses a NetRC File to provide authentication information (username and password) when you download data:https://stackoverflow.com/questions/71605910/how-do-i-use-the-terra-r-package-with-cloud-optimized-geotiffs-requiring-authent  
+
+
+
+
+
 # load libraries
 
 #install.packages("rstac")
 
-library(rstac) # rstac is a client for finding and downloading data stored in a SpatioTemporal Asset Catalog (rstac) and available trough an API
+# rstac is a client for finding and downloading data stored in a SpatioTemporal Asset Catalog (rstac) and available trough an API
+library(rstac) 
 
 
 
@@ -23,21 +32,24 @@ library(rstac) # rstac is a client for finding and downloading data stored in a 
 # SEARCH LANDSAT ----------------------------------------------------------
 
 
-# connect to the lansat stac catalog endpoint
+# connect to the landsat stac catalog endpoint
 landsat_stac <- stac("https://landsatlook.usgs.gov/stac-server")
 
+# test it out
 get_request(landsat_stac)
 
+# what collections are available?
+#   Info on Landsat collections: https://stacindex.org/catalogs/usgs-landsat-collection-2-api#/ 
 landsat_collections <- get_request(collections(landsat_stac))
+landsat_collections
 
 
 #set up the search parameters
-#   Info on Landsat collections: https://stacindex.org/catalogs/usgs-landsat-collection-2-api#/
 search_landsat <- stac_search(
   q = landsat_stac,
-  collections = "landsat-c2l2-sr",
+  collections = "landsat-c2l2-sr", #	Landsat Collection 2 Level-2 UTM Surface Reflectance (SR) Product
   ids = NULL,
-  bbox = c( -123.824405, 39.485343, -123.748531, 39.556319),  # minimum longitude, minimum latitude, maximum longitude, and maximum latitude --- 
+  bbox = c( -123.824405, 39.485343, -123.748531, 39.556319),  # minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
   datetime = "2023-06-01T00:00:00Z/2023-07-30T00:00:00Z",  # A closed interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z" 
   intersects = NULL,
   limit = 100
@@ -65,16 +77,29 @@ results_landsat_cloudcover <-
     ext_query(search_landsat, 'eo:cloud_cover' < 10) 
     )
 
+# see the results
+results_landsat_cloudcover
 
+# see the list of items available from our search
+results_landsat_cloudcover$features
+
+# what assets are available for a given item?
+names(results_landsat_cloudcover$features[[1]]$assets)
 
 
 # ANALYSIS LANDSAT ----------------------------------------------------------------
 
-# select assets from the list of options returned
-items <- assets_select(results_landsat,
-                       asset_names = c("B02", "B03", "SR_B1", "SR_B2"))
+# Items have assets - example: item = photo, asset = a specific band
+items <- assets_select(results_landsat_cloudcover,
+                       asset_names = c("green", "nir08"))
+
+# get the URLs for the assets
+assets_url(items)
 
 # download a scene
+
+
+# calculate NDWI = (Green – NIR)/(Green + NIR)
 
 
 
