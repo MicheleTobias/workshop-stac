@@ -6,6 +6,7 @@
 # r-spatial STAC: https://r-spatial.org/r/2021/04/23/cloud-based-cubes.html
 # stac spec tutorial on querying: https://stacspec.org/en/tutorials/2-using-rstac-and-cql2-to-query-stac-api/
 # stac spec tutorial on downloading data: https://stacspec.org/en/tutorials/1-download-data-using-r/
+# https://lpdaac.usgs.gov/resources/e-learning/getting-started-with-cloud-native-harmonized-landsat-sentinel-2-hls-data-in-r/ 
 
 
 
@@ -13,7 +14,9 @@
 
 # get access to the data:
 #   1. Sign up for an Earthdata Login account: https://urs.earthdata.nasa.gov/
-#   2. NASA uses a NetRC File to provide authentication information (username and password) when you download data:https://stackoverflow.com/questions/71605910/how-do-i-use-the-terra-r-package-with-cloud-optimized-geotiffs-requiring-authent  
+#   2. NASA uses a NetRC File to provide authentication information (username and password) when you download data:
+#       A. Write your NetRC file using this script from NASA: https://git.earthdata.nasa.gov/projects/LPDUR/repos/hls_tutorial_r/browse/Scripts/earthdata_netrc_setup.R It writes a text file with your user name and password to your user home directory
+#       B. Configure rgdal: https://stackoverflow.com/questions/71605910/how-do-i-use-the-terra-r-package-with-cloud-optimized-geotiffs-requiring-authent  
 
 
 
