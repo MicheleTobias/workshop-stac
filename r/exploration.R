@@ -29,6 +29,13 @@
 # rstac is a client for finding and downloading data stored in a SpatioTemporal Asset Catalog (rstac) and available trough an API
 library(rstac) 
 library(terra)
+library(httr)
+
+# configuration for GDAL to work with the NetRC file
+setGDALconfig("GDAL_HTTP_UNSAFESSL", "YES")
+setGDALconfig("GDAL_HTTP_COOKIEFILE", ".rcookies") 
+setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+setGDALconfig("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "TIF") 
 
 
 
@@ -110,15 +117,116 @@ band_ir <- rast(urls[2])
 
 
 
+# AUTHENTICATE NASA EARTHDATA ----------------------------------------------------
+
+edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"), 
+                           password = Sys.getenv("EARTHDATA_PASSWORD"),
+                           token_number = 1
+) {
+  base <- 'https://urs.earthdata.nasa.gov'
+  list_tokens <- "/api/users/tokens"
+  pw <- openssl::base64_encode(paste0(username, ":", password))
+  resp <- httr::GET(paste0(base,list_tokens),
+                    httr::add_headers(Authorization= paste("Basic", pw)))
+  p <- httr::content(resp, "parsed")[[token_number]]
+  
+  if(is.null(p$access_token)) {
+    request_token <- "/api/users/token"
+    resp <- httr::GET(paste0(base,request_token),
+                      httr::add_headers(Authorization= paste("Basic", pw)))
+    p <- httr::content(resp, "parsed")
+  }
+  header = paste("Authorization: Bearer", p$access_token)
+  Sys.setenv("GDAL_HTTP_HEADERS"=header)
+  invisible(header)
+}
+
+edl_set_token(username = '****', password = '****')
+
 
 # SEARCH HLS ----------------------------------------------------------
 
-# connect to the HLS stac catalog endpoint
-#hls_stac <- stac("") 
+## https://lpdaac.usgs.gov/resources/e-learning/getting-started-with-cloud-native-harmonized-landsat-sentinel-2-hls-data-in-r/
+
+# connect to the landsat stac catalog endpoint
+nasa_stac <- stac("https://cmr.earthdata.nasa.gov/stac/LPCLOUD")
+
+
+bbox = c( -123.824405, 39.485343, -123.748531, 39.556319)
+extent = ext(c(bbox[1],bbox[3],bbox[2],bbox[4]))
+
+#set up the search parameters
+search_hls <- stac_search(
+  q = nasa_stac,
+  #collections = "landsat-c2l2-sr", #	Landsat Collection 2 Level-2 UTM Surface Reflectance (SR) Product
+  collections = "HLSS30.v2.0", # https://hls.gsfc.nasa.gov/products-description/s30/
+  ids = NULL,
+  bbox = bbox,  # minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
+  datetime = "2023-06-01T00:00:00Z/2023-07-30T00:00:00Z",  # A closed interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z" 
+  intersects = NULL,
+  limit = 100
+)
+
+# run the search, NASA needs a post not get for some reason
+results_hls <- post_request(search_hls)
+
+# see what the results are from our search
+results_hls
+
+# inspect the first element of the results
+results_hls$features[[1]]
+
+
+# FILTER RESULTS ----------------------------------------------------------
+
+# We can filter the results of our search further by adding 
+# a query to our search parameters
+
+# filter by cloud cover
+#   ext_query adds additional parameters to the search using item properties
+# This doesn't work on the NASA STAC, you have to filter the results after
+# results_landsat_cloudcover <- 
+#  post_request(
+#    ext_query(search_landsat, 'eo:cloud_cover' < 10) 
+#    )
+
+# You can see where the cloud cover is in the STAC record to filter
+results_hls$features[[1]]$properties$`eo:cloud_cover`
+
+# see the results
+#results_landsat_cloudcover
+
+# see the list of items available from our search
+#results_landsat_cloudcover$features
+
+# what assets are available for a given item?
+names(results_hls$features[[1]]$assets)
+# https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions
 
 
 
 
+# ANALYSIS LANDSAT ----------------------------------------------------------------
 
+# Items have assets - example: item = photo, asset = a specific band
+items <- assets_select(results_hls,
+                       asset_names = c("B03", "B8A"))
 
-#dune_bbox<-
+# get the URLs for the assets
+urls<-assets_url(items)
+
+# setup Rasters as part of a scene
+# The data is read until you try to calculate or plot values
+
+band_green <- rast(paste0('/vsicurl/', urls[1])) 
+#you want to pass the an spatExtent to limit the data downloaded
+#invalid extent because the HLS scene is in UTM
+# TODO: reproject extent to UTM
+#band_green <- rast(paste0('/vsicurl/',urls[1]), win=extent, snap="in") 
+
+band_ir <- rast(paste0('/vsicurl/', urls[13]))
+
+#calculate NDWI = (Green – NIR)/(Green + NIR)
+NDWI <- (band_green - band_ir)/(band_green + band_ir)
+
+plot(NDWI)
