@@ -28,6 +28,7 @@
 
 # rstac is a client for finding and downloading data stored in a SpatioTemporal Asset Catalog (rstac) and available trough an API
 library(rstac) 
+library(terra)
 
 
 
@@ -97,10 +98,13 @@ items <- assets_select(results_landsat_cloudcover,
                        asset_names = c("green", "nir08"))
 
 # get the URLs for the assets
-assets_url(items)
+urls<-assets_url(items)
 
 # download a scene
 
+band_green <- rast(urls[1])
+
+band_ir <- rast(urls[2])
 
 # calculate NDWI = (Green – NIR)/(Green + NIR)
 
