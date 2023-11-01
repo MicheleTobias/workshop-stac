@@ -246,6 +246,6 @@ plot(ndwi, main="NDWI", range=c(-1,1)) # the range parameter limits the plot to 
 
 # Combine plots and apply color palettes 
 layout(matrix(c(1,1,1,1,2,3), ncol=2, nrow=3, byrow=TRUE))
-plot(ndwi, main="NDWI", range=c(-1,1), col=brewer.pal(name='Blues', n=100))
-plot(band_green_crop, main = "Green", col=brewer.pal(name='Greens', n=100))
-plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=100))
+plot(ndwi, main="NDWI", range=c(-1,1), col=brewer.pal(name='Blues', n=9))
+plot(band_green_crop, main = "Green", col=brewer.pal(name='Greens', n=9))
+plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=9))
