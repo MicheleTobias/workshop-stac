@@ -30,6 +30,7 @@
 library(rstac) 
 library(terra)
 library(httr)
+library(RColorBrewer)
 
 # configuration for GDAL to work with the NetRC file
 setGDALconfig("GDAL_HTTP_UNSAFESSL", "YES")
@@ -219,14 +220,32 @@ urls<-assets_url(items)
 # The data is read until you try to calculate or plot values
 
 band_green <- rast(paste0('/vsicurl/', urls[1])) 
+utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
+band_green_crop <- crop(band_green, utm_extent)
 #you want to pass the an spatExtent to limit the data downloaded
 #invalid extent because the HLS scene is in UTM
 # TODO: reproject extent to UTM
 #band_green <- rast(paste0('/vsicurl/',urls[1]), win=extent, snap="in") 
 
-band_ir <- rast(paste0('/vsicurl/', urls[13]))
+band_ir <- rast(paste0('/vsicurl/', urls[13]), win=utm_extent)
 
-#calculate NDWI = (Green – NIR)/(Green + NIR)
-NDWI <- (band_green - band_ir)/(band_green + band_ir)
+# calculate NDWI = (Green – NIR)/(Green + NIR)
 
-plot(NDWI)
+normdiff <- function(x, y) {
+  (x - y) / (x + y)
+}
+
+ndwi = normdiff(band_green_crop, band_ir) 
+
+hist(ndwi, xlim = (c(-1,1)), breaks = 40)
+hist(band_green_crop, breaks = 40)
+
+plot(band_green_crop)
+plot(band_ir)
+plot(ndwi, main="NDWI", range=c(-1,1)) # the range parameter limits the plot to just values in the interval you give - good to filtering out outliers (which happen especially over the ocean)
+
+# Combine plots and apply color palettes 
+layout(matrix(c(1,1,1,1,2,3), ncol=2, nrow=3, byrow=TRUE))
+plot(ndwi, main="NDWI", range=c(-1,1), col=brewer.pal(name='Blues', n=100))
+plot(band_green_crop, main = "Green", col=brewer.pal(name='Greens', n=100))
+plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=100))
