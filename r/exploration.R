@@ -61,7 +61,10 @@ edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"),
   invisible(header)
 }
 
-edl_set_token(username = '****', password = '****')
+earthdata_username <- readline("Earthdata Username:")
+earthdata_password <- readline("Earthdata Password:")
+
+edl_set_token(username = earthdata_username, password = earthdata_password)
 
 
 # SEARCH HLS ----------------------------------------------------------
@@ -96,28 +99,9 @@ results_hls
 # inspect the first element of the results
 results_hls$features[[1]]
 
-
-# FILTER RESULTS ----------------------------------------------------------
-
-# We can filter the results of our search further by adding 
-# a query to our search parameters
-
-# filter by cloud cover
-#   ext_query adds additional parameters to the search using item properties
-# This doesn't work on the NASA STAC, you have to filter the results after
-# results_landsat_cloudcover <- 
-#  post_request(
-#    ext_query(search_landsat, 'eo:cloud_cover' < 10) 
-#    )
-
 # You can see where the cloud cover is in the STAC record to filter
 results_hls$features[[1]]$properties$`eo:cloud_cover`
 
-# see the results
-#results_landsat_cloudcover
-
-# see the list of items available from our search
-#results_landsat_cloudcover$features
 
 # what assets are available for a given item?
 names(results_hls$features[[1]]$assets)
@@ -126,11 +110,15 @@ names(results_hls$features[[1]]$assets)
 
 
 
-# ANALYSIS LANDSAT ----------------------------------------------------------------
+# ANALYSIS HLS ----------------------------------------------------------------
 
 # Items have assets - example: item = photo, asset = a specific band
 items <- assets_select(results_hls,
-                       asset_names = c("B03", "B8A"))
+                       asset_names = c(
+                         "B03", #green: 0.53 – 0.59
+                         "B8A", #NIR narrow: 0.85 – 0.88
+                         "B04"  #red: 0.64 – 0.67
+                         ))
 
 # get the URLs for the assets
 urls<-assets_url(items)
@@ -146,7 +134,8 @@ band_green_crop <- crop(band_green, utm_extent)
 # TODO: reproject extent to UTM
 #band_green <- rast(paste0('/vsicurl/',urls[1]), win=extent, snap="in") 
 
-band_ir <- rast(paste0('/vsicurl/', urls[13]), win=utm_extent)
+band_ir <- rast(paste0('/vsicurl/', urls[25]), win=utm_extent)
+band_red <- rast(paste0('/vsicurl/', urls[13]), win=utm_extent)
 
 # calculate NDWI = (Green – NIR)/(Green + NIR)
 
@@ -155,19 +144,45 @@ normdiff <- function(x, y) {
 }
 
 ndwi = normdiff(band_green_crop, band_ir) 
+ndvi = normdiff(band_ir, band_red)
 
-hist(ndwi, xlim = (c(-1,1)), breaks = 40)
+hist(ndwi, breaks = 40)
+summary(ndwi) #<-- ok, so there's some weirdness here
 hist(band_green_crop, breaks = 40)
+
+hist(ndvi, breaks = 40)
+summary(ndvi)
+
 
 plot(band_green_crop)
 plot(band_ir)
 plot(ndwi, main="NDWI", range=c(-1,1)) # the range parameter limits the plot to just values in the interval you give - good to filtering out outliers (which happen especially over the ocean)
 
 # Combine plots and apply color palettes 
+
+# Plot NDWI
+
+# Make a layout with one big figure at the top and two smaller figures below. The first figure takes up 4 cells in the matrix.
 layout(matrix(c(1,1,1,1,2,3), ncol=2, nrow=3, byrow=TRUE))
+
+# 1
 plot(ndwi, main="NDWI", range=c(-1,1), col=brewer.pal(name='Blues', n=9))
+# 2
 plot(band_green_crop, main = "Green", col=brewer.pal(name='Greens', n=9))
+# 3
 plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=9))
+
+
+# Plot NDVI
+layout(matrix(c(1,1,1,1,2,3), ncol=2, nrow=3, byrow=TRUE))
+
+# 1
+plot(ndvi, main="NDVI", range=c(-1,1), col=brewer.pal(name='Greens', n=9))
+# 2
+plot(band_red, main = "Red", col=brewer.pal(name='YlOrRd', n=9))
+# 3
+plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=9))
+
 
 
 
