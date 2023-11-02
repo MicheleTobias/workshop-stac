@@ -154,9 +154,9 @@ hist(ndvi, breaks = 40)
 summary(ndvi)
 
 
-plot(band_green_crop)
-plot(band_ir)
-plot(ndwi, main="NDWI", range=c(-1,1)) # the range parameter limits the plot to just values in the interval you give - good to filtering out outliers (which happen especially over the ocean)
+
+# PLOT HSL ----------------------------------------------------------------
+
 
 # Combine plots and apply color palettes 
 
@@ -166,7 +166,7 @@ plot(ndwi, main="NDWI", range=c(-1,1)) # the range parameter limits the plot to 
 layout(matrix(c(1,1,1,1,2,3), ncol=2, nrow=3, byrow=TRUE))
 
 # 1
-plot(ndwi, main="NDWI", range=c(-1,1), col=brewer.pal(name='Blues', n=9))
+plot(ndwi, main="NDWI", range=c(-1,1), col=brewer.pal(name='Blues', n=9)) # the range parameter limits the plot to just values in the interval you give - good to filtering out outliers (which happen especially over the ocean)
 # 2
 plot(band_green_crop, main = "Green", col=brewer.pal(name='Greens', n=9))
 # 3
