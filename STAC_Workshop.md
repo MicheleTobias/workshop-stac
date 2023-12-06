@@ -35,7 +35,7 @@ What is a GeoTIFF? Why do you want to work with this?
 
 What does "Cloud Optimized" mean? Why is this helpful?
 
-This is helpful: (Cloud-Optimized Geospatial Formats Guide)[https://guide.cloudnativegeo.org/] - probably because one of the authors looks very familiar!
+This is helpful: [Cloud-Optimized Geospatial Formats Guide](https://guide.cloudnativegeo.org/) - probably because one of the authors looks very familiar!
 
 
 ### More detail about APIs in general and STAC API specifically
