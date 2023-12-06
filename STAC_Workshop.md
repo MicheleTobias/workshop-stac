@@ -49,7 +49,7 @@ This is helpful: (Cloud-Optimized Geospatial Formats Guide)[https://guide.cloudn
 
 1. Search the STAC catalog (using the API) to see what's available
 
-1. Decide which imaged you want
+1. Decide which images you want
 
 1. Retrieve the data you want to work with
 
@@ -74,6 +74,6 @@ This is helpful: (Cloud-Optimized Geospatial Formats Guide)[https://guide.cloudn
 
 # Reference Material & Further Reading
 
-(Cloud-based processing of satellite image collections in R using STAC, COGs, and on-demand data cubes)[https://r-spatial.org/r/2021/04/23/cloud-based-cubes.html]
+[Cloud-based processing of satellite image collections in R using STAC, COGs, and on-demand data cubes](https://r-spatial.org/r/2021/04/23/cloud-based-cubes.html)
 
-(Cloud-Optimized Geospatial Formats Guide)[https://guide.cloudnativegeo.org/]
+[Cloud-Optimized Geospatial Formats Guide](https://guide.cloudnativegeo.org/)
