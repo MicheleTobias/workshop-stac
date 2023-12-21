@@ -19,15 +19,22 @@ Why does it matter? Why do it this way vs. downloading images and storing them y
 
 ## SpatioTemporal Asset Catalogs (STAC)
 
-What is it? Why is it useful?
+### What is it?
+
+A standard way of describing geospatial data in a computer first but still human readable format (JSON). It was originally created to catalog large amounts of Satellite based Earth Observation data.
+
+### Why is it useful?
+We use STAC to organize a large number of files and make it possible to search for which files are needed for a given analysis and then pass the results to the analysis tools. The key is that STAC describes what to expect inside a file and where to find the file in a way that can be passed to computer code or programs that need to access the data.
 
 Define: 
 
-* Collection
-* Item
-* Catalog
-* STAC API
+* Asset - a single file
+* Item - one or more Assets that contain data about the same place in time (e.g. multiple bands from the same capture) - aka Scenes. 
+* Collection - one or more Items that have shared characteristics (e.g. same Sensor, processing level, or product)
+* Catalog - one or more Collections (e.g. Landsat7 and Landsat8)
+* STAC API - a web interface for searching a STAC Catalog using computer software or code. API = Application Programming Interface
 
+https://stacspec.org/en/tutorials/intro-to-stac/
 
 ### Cloud Optimized GeoTIFF (COG)
 
