@@ -70,16 +70,31 @@ List collections in the Catalog
 
 https://planetarycomputer.microsoft.com/api/stac/v1/collections
 
+```
+Base URL: https://planetarycomputer.microsoft.com/api/stac/v1/
+API Endpoint: collections:
+```
 
 List items in the specified Collection
 
 https://planetarycomputer.microsoft.com/api/stac/v1/collections/3dep-lidar-dsm/items
-
+```
+API Endpoint: collections
+Arguments:  3dep-lidar-dsm, items
+```
+This asks for items that are part of 3dep-lidar-dsm, if I left off the items part, it would just give me information about the collection.
 
 Search
 
 https://planetarycomputer.microsoft.com/api/stac/v1/search?collections=3dep-lidar-dsm&bbox=-124.41060660766607,32.5342307609976,-114.13445790587905,42.00965914828148&limit=25
-
+```
+API Endpoint: search
+Arguments/Parameters: collections, bbox, limit
+```
+Each named argument or parameter has a value passed in... in R this might look like
+```
+search(collections=..., bbox=..., limit=...)
+```
 
 **Resources**
 
