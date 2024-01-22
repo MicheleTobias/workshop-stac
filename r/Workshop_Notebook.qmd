@@ -1,29 +1,8 @@
 ---
-title: "Untitled"
+title: "STAC Catalog Workshop"
 format: html
 editor: visual
 ---
-
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
-
-## Running Code
-
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
-
-```{r}
-1 + 1
-```
-
-You can add options to executable code like this
-
-```{r}
-#| echo: false
-2 * 2
-```
-
-The `echo: false` option disables the printing of code (only output is displayed).
 
 # Downloading Satellite Data from SpatioTemporal Asset Catalogs (STAC)
 
@@ -67,7 +46,7 @@ First, we need to install any R libraries we want to use. Next, we need to load 
 
 ```{r}
 # Install Packages
-install.packages(c("rstac", "terra", "httr", "RColorBrewer", "getPass"))
+#install.packages(c("rstac", "terra", "httr", "RColorBrewer", "getPass"))
 
 # Load Libraries
 library(rstac)          # interact with stac catalogs
@@ -94,17 +73,21 @@ setGDALconfig("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "TIF")
 "Authenticate" is a fancy word meaning "log in" or "prove you should have access". We'll do this by making a function that uses your Earthdata username and password. We've set up the code to ask you for these items so you don't have to store them in code that might be shared in public repositories. But this means you'll need to pay attention and set it here or the rest of the code won't run (because you won't be authenticated).
 
 ```{r}
-# create a function to authenticate your NASA Earthdata account
 
 edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"), 
                            password = Sys.getenv("EARTHDATA_PASSWORD"),
                            token_number = 1
 ) {
+  #set the base URL (the first part of the website's URL)
   base <- 'https://urs.earthdata.nasa.gov'
+  
   list_tokens <- "/api/users/tokens"
+  
   pw <- openssl::base64_encode(paste0(username, ":", password))
+  
   resp <- httr::GET(paste0(base,list_tokens),
                     httr::add_headers(Authorization= paste("Basic", pw)))
+  
   p <- httr::content(resp, "parsed")[[token_number]]
   
   if(is.null(p$access_token)) {
@@ -148,6 +131,8 @@ Now let's define our geographic area of interest as the area that includes 10 Mi
 ```{r}
 bbox = c( -123.824405, 39.485343, -123.748531, 39.556319)
 extent = ext(c(bbox[1],bbox[3],bbox[2],bbox[4]))
+
+plot(extent, col="lightblue") #ok, not that interesting, but we know it plots a bounding box
 ```
 
 Set our search parameters
@@ -169,11 +154,7 @@ Run the search. (Note: NASA needs a "post" not "get" for some reason.)
 
 ```{r}
 results_hls <- post_request(search_hls)
-```
 
-See what the results are from our search:
-
-```{r}
 results_hls
 ```
 
@@ -183,21 +164,32 @@ Inspect the first element of the results:
 results_hls$features[[1]]
 ```
 
-You can see where the cloud cover is in the STAC record to filter:
+And, let's look at the properties of this first element:
+
+```{r}
+results_hls$features[[1]]$properties
+```
+
+We can see what the cloud cover property is called in the STAC record based on this output. Let's look at the cloud cover property, something that will be important for images in a coastal area.
 
 ```{r}
 results_hls$features[[1]]$properties$`eo:cloud_cover`
 ```
 
-What assets are available for a given item? [More Inforation](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions)
+What assets are available for a given item? [More Information](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions) You can think of "assets" as bands of an image or different layers of information.
 
 ```{r}
 names(results_hls$features[[1]]$assets)
 ```
 
-# ANALYSIS HLS ----------------------------------------------------------------
+# ANALYSIS Using HLS
 
-Items have assets - example: item = photo, asset = a specific band
+Normalized Difference Vegetation Index (NDVI) is an index commonly used to investigate vegetation health. You may already be familiar with this tool. Another similar index, Normalized Difference Water Index (NDWI), is used to understand the water content of plants or soils in remotely sensed imagery. It might seem counter-intuitive, but sandy dunes hold a lot of water. We'll use NDWI to help us differentiate the dunes from other substrate in our images.
+
+First, we'll set which assets we're interested in so we don't have to download all the assets.
+
+Reminder: Items have assets - example: item = photo, asset = a specific band
+
 ```{r}
 items <- assets_select(results_hls,
                        asset_names = c(
@@ -207,17 +199,15 @@ items <- assets_select(results_hls,
                          ))
 ```
 
-Get the URLs for the assets
+Now we'll get the URLs for the assets. URLs are how we'll request the assets from the API.
 
 ```{r}
 urls<-assets_url(items)
+
+urls
 ```
 
-Setup Rasters as part of a scene.
-The data is read until you try to calculate or plot values.
-You want to pass the an spatExtent to limit the data downloaded.
-Invalid extent because the HLS scene is in UTM
-(TODO: reproject extent to UTM)
+To decide which of these items we want to download, we need to glean information from the file names in the URLs. The letter B followed by a number (or alphanumeric code) tells us the band number. Another part of the file name contains the year.
 
 First, let's get the Green band:
 
@@ -226,19 +216,23 @@ band_green <- rast(paste0('/vsicurl/', urls[1]))
 utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
 band_green_crop <- crop(band_green, utm_extent)
 
+
+
 #band_green <- rast(paste0('/vsicurl/',urls[1]), win=extent, snap="in") 
 ```
 
 Now let's get the IR and Red bands:
+
 ```{r}
 band_ir <- rast(paste0('/vsicurl/', urls[25]), win=utm_extent)
 band_red <- rast(paste0('/vsicurl/', urls[13]), win=utm_extent)
 ```
 
-We can calculate Normalized Difference Water Index (NDWI) as: 
-NDWI = (Green – NIR)/(Green + NIR)
+We can calculate Normalized Difference Water Index (NDWI) as:
 
-We can write a function in R to calcuate any normalized difference index. 
+NDWI = (Green -- NIR)/(Green + NIR)
+
+We can write a function in R to calcuate any normalized difference index.
 
 ```{r}
 normdiff <- function(x, y) {
@@ -247,25 +241,35 @@ normdiff <- function(x, y) {
 ```
 
 We just need to know which band to submit for the x and y inputs to toggle between indexes like NDWI and NDVI (normalized difference vegetation index).
+
 ```{r}
 ndwi = normdiff(band_green_crop, band_ir) 
 ndvi = normdiff(band_ir, band_red)
 ```
 
 Let's look at the histogram of NDWI to understand the output better:
+
 ```{r}
 hist(ndwi, breaks = 40)
 ```
 
 Now let's look at the summary of the values in our NDWI raster:
+
 ```{r}
 summary(ndwi) #<-- ok, so there's some weirdness here
 ```
 
+There is something odd going on with our values. Why is the minimum -41 and the max 85.6? Shouldn't the range of this index be \[-1,1\]? Yes, it should, but the sunlight glinting off the tops of waves in the ocean does odd things. So we'll have to filter those results out since we suspect they are not useful and not indicative of anything we're interested in.
+
+Let's check the Green band.
 
 ```{r}
 hist(band_green_crop, breaks = 40)
 ```
+
+Something similar is going on here - do you see the long tail?
+
+NDVI should also have some issues given what we've already seen, so let's look.
 
 ```{r}
 hist(ndvi, breaks = 40)
@@ -275,23 +279,18 @@ hist(ndvi, breaks = 40)
 summary(ndvi)
 ```
 
+# PLOT HSL 
 
-
-# PLOT HSL ----------------------------------------------------------------
-
-
-In this section, we'll plot the data we've downloaded and calculated. We'll combine plots and apply color palettes. 
+In this section, we'll plot the data we've downloaded and calculated. We'll combine plots and apply color palettes.
 
 ## Plot NDWI
 
 Make a layout with one big figure at the top and two smaller figures below. The first figure takes up 4 cells in the matrix.
 
+We'll call three different plots to fill in the slots in our layout, using the range parameter to filter out values outside of the range of our indexes. Note that this plot looks better in R Studio rather than Quarto.
+
 ```{r}
 layout(matrix(c(1,1,1,1,2,3), ncol=2, nrow=3, byrow=TRUE))
-```
-
-We'll call three different plots to fill in the slots in our layout:
-```{r}
 # 1
 plot(ndwi, main="NDWI", range=c(-1,1), col=brewer.pal(name='Blues', n=9)) # the range parameter limits the plot to just values in the interval you give - good to filtering out outliers (which happen especially over the ocean)
 # 2
@@ -299,6 +298,8 @@ plot(band_green_crop, main = "Green", col=brewer.pal(name='Greens', n=9))
 # 3
 plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=9))
 ```
+
+Do you see the darker blue areas on the land? Those areas are the dune field. They stand out easily from the other soil types surrounding them.
 
 We'll do a similar process for the NDVI analysis:
 
@@ -315,17 +316,7 @@ plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=9))
 
 ```
 
-
-
-
-
-
-
-
-
-
-
-
+The dunes don't have a lot of green vegetation,s o they look lighter than the surrounding areas. Beach and dune vegetation tend to be more silver or gray in color to reflect excess light, like many Mediterranean plant species growing in harsh condition. However, this means they have reflectance properties more similar to sand than plants so even when vegetation is present, it's hard to find with NDVI.
 
 ## Citations & Further Reaading
 
