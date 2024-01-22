@@ -1,20 +1,24 @@
-# dune-remote-sensing
-exploring ideas for remote sensing of dunes
+# Workshop: Downloading Satellite Data from SpatioTemporal Asset Catalogs (STAC)
+This repository contains notes and code to support a workshop on STAC Catalogs.
 
 
-# Workshop Spin-off Notes
+## Workshop Materials
 
-Define all of the parts of STAC that we encounter. What's an item, a collection, etc.
+[Reader](STAC_Workshop.md)
 
-[r-spatial](https://r-spatial.org/r/2021/04/23/cloud-based-cubes.html) has a nice explanation.
+[Code](r/exploration.R)
 
-
-Submit Workshop/Tutorial to:
-
-* [STAC Tutorials](https://stacspec.org/en/tutorials/)
-* Cloud Native Geo Guide
 
 
 # Resources
 
 [Cloud-Optimized Geospatial Formats Guide](https://guide.cloudnativegeo.org/)
+
+[r-spatial](https://r-spatial.org/r/2021/04/23/cloud-based-cubes.html)
+
+
+# Notes
+Submit Workshop/Tutorial to:
+
+* [STAC Tutorials](https://stacspec.org/en/tutorials/)
+* Cloud Native Geo Guide
