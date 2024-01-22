@@ -1,0 +1,342 @@
+---
+title: "Untitled"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+# Downloading Satellite Data from SpatioTemporal Asset Catalogs (STAC)
+
+Authors:
+
+-   Michele Tobias, PhD - [University of California Davis DataLab](https://datalab.ucdavis.edu/)
+
+-   Alex Mandel, PhD - [Development Seed](https://developmentseed.org/)
+
+In this workshop, we'll use [NASA's Earthdata](https://www.earthdata.nasa.gov/) repository to learn how to:
+
+1.  Get access to a STAC Catalog
+
+2.  Search the catalog
+
+3.  Download data from the catalog
+
+4.  Perform a basic analysis
+
+For our work today, we'll be working with data from [10 Mile Dunes](https://maps.app.goo.gl/8Qg3WD1xEbA4jKdZ8), a large coastal dune field in northern California. Why this area? Coastal California has many of the challenges you might face when working with satellite imagery. The one many people will encounter is cloud cover. Another is scatter from water or other irregular natural surfaces. This area also has a variety of land cover, including ocean, California coastal scrub, active sandy dunes, agriculture, and built up areas. But really, Michele just wanted to explore this area because she researches beach and dune plants. You can modify the code to work with your own area of interest.
+
+## Set Up Your Project
+
+### Configure Your Environment & Set Up Authentication
+
+There are some things we need to do to get access to NASA's Earthdata, but we only need to do these things the first time we engage with this dataset. Another way to put this is that once we do these first steps, we probably don't need to do them again.
+
+To get access to NASA Earthdata, we need to do the following steps:
+
+1.  Sign up for an Earthdata Login account: <https://urs.earthdata.nasa.gov/>
+
+2.  NASA uses a NetRC File to provide authentication information (username and password) when you download data. To set up your NetRC file, you'll need to do the following:
+
+    A. Write your NetRC file using this script from NASA: <https://git.earthdata.nasa.gov/projects/LPDUR/repos/hls_tutorial_r/browse/Scripts/earthdata_netrc_setup.R> It writes a text file with your user name and password to your user home directory
+
+    B. Configure GDAL: <https://stackoverflow.com/questions/71605910/how-do-i-use-the-terra-r-package-with-cloud-optimized-geotiffs-requiring-authent>
+
+### Install and Load Libraries
+
+First, we need to install any R libraries we want to use. Next, we need to load those libraries. You might assume that if we install the library, we want to use it, but R doesn't automatically load libraries you just installed.
+
+```{r}
+# Install Packages
+install.packages(c("rstac", "terra", "httr", "RColorBrewer", "getPass"))
+
+# Load Libraries
+library(rstac)          # interact with stac catalogs
+library(terra)          # work with raster data
+#library(httr)           # gets information from webpages
+library(RColorBrewer)   # color pallets from Color Brewer, a library of colors designed for optimized readability in cartograhy
+library(getPass)        # allows us to give the code our password without it printing to the console
+```
+
+### Configure the GDAL Library
+
+GDAL is the library that allows your computer to read many spatial data formats and can translate one format to another (for example, you can read a shapefile into your code and save it as a geopackage thanks to GDAL). We need to change some of the settings in the way the library works for this R session. Don't worry; it won't change how GDAL works with your other geospatial programs.
+
+```{r}
+# configuration for GDAL to work with the NetRC file
+setGDALconfig("GDAL_HTTP_UNSAFESSL", "YES")
+setGDALconfig("GDAL_HTTP_COOKIEFILE", ".rcookies") 
+setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+setGDALconfig("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "TIF") 
+```
+
+### Authenticate NASA Earthdata
+
+"Authenticate" is a fancy word meaning "log in" or "prove you should have access". We'll do this by making a function that uses your Earthdata username and password. We've set up the code to ask you for these items so you don't have to store them in code that might be shared in public repositories. But this means you'll need to pay attention and set it here or the rest of the code won't run (because you won't be authenticated).
+
+```{r}
+# create a function to authenticate your NASA Earthdata account
+
+edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"), 
+                           password = Sys.getenv("EARTHDATA_PASSWORD"),
+                           token_number = 1
+) {
+  base <- 'https://urs.earthdata.nasa.gov'
+  list_tokens <- "/api/users/tokens"
+  pw <- openssl::base64_encode(paste0(username, ":", password))
+  resp <- httr::GET(paste0(base,list_tokens),
+                    httr::add_headers(Authorization= paste("Basic", pw)))
+  p <- httr::content(resp, "parsed")[[token_number]]
+  
+  if(is.null(p$access_token)) {
+    request_token <- "/api/users/token"
+    resp <- httr::GET(paste0(base,request_token),
+                      httr::add_headers(Authorization= paste("Basic", pw)))
+    p <- httr::content(resp, "parsed")
+  }
+  header = paste("Authorization: Bearer", p$access_token)
+  Sys.setenv("GDAL_HTTP_HEADERS"=header)
+  invisible(header)
+}
+```
+
+Now the code asks for our credentials.
+
+```{r}
+earthdata_username <- getPass("Earthdata Username:")
+
+earthdata_password <- getPass("Earthdata Password:")
+
+# note: use the function readline() if you want to be able to see your inputs... we need to mask the instructors' credentials for the broadcast.
+```
+
+Now we run the authentication function inputting our username and password:
+
+```{r}
+edl_set_token(username = earthdata_username, password = earthdata_password)
+```
+
+## Search Harmonized Lansat Sentinel (HSL) Data
+
+First, we need to connect to the Landsat STAC catalog endpoint
+
+```{r}
+nasa_stac <- stac("https://cmr.earthdata.nasa.gov/stac/LPCLOUD")
+```
+
+Now let's define our geographic area of interest as the area that includes 10 Mile Dunes:
+
+```{r}
+bbox = c( -123.824405, 39.485343, -123.748531, 39.556319)
+extent = ext(c(bbox[1],bbox[3],bbox[2],bbox[4]))
+```
+
+Set our search parameters
+
+```{r}
+search_hls <- stac_search(
+  q = nasa_stac,
+  #collections = "landsat-c2l2-sr", #	Landsat Collection 2 Level-2 UTM Surface Reflectance (SR) Product
+  collections = "HLSS30.v2.0", # https://hls.gsfc.nasa.gov/products-description/s30/
+  ids = NULL,
+  bbox = bbox,  # minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
+  datetime = "2023-06-01T00:00:00Z/2023-07-30T00:00:00Z",  # A closed interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z" 
+  intersects = NULL,
+  limit = 100
+)
+```
+
+Run the search. (Note: NASA needs a "post" not "get" for some reason.)
+
+```{r}
+results_hls <- post_request(search_hls)
+```
+
+See what the results are from our search:
+
+```{r}
+results_hls
+```
+
+Inspect the first element of the results:
+
+```{r}
+results_hls$features[[1]]
+```
+
+You can see where the cloud cover is in the STAC record to filter:
+
+```{r}
+results_hls$features[[1]]$properties$`eo:cloud_cover`
+```
+
+What assets are available for a given item? [More Inforation](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions)
+
+```{r}
+names(results_hls$features[[1]]$assets)
+```
+
+# ANALYSIS HLS ----------------------------------------------------------------
+
+Items have assets - example: item = photo, asset = a specific band
+```{r}
+items <- assets_select(results_hls,
+                       asset_names = c(
+                         "B03", #green: 0.53 – 0.59
+                         "B8A", #NIR narrow: 0.85 – 0.88
+                         "B04"  #red: 0.64 – 0.67
+                         ))
+```
+
+Get the URLs for the assets
+
+```{r}
+urls<-assets_url(items)
+```
+
+Setup Rasters as part of a scene.
+The data is read until you try to calculate or plot values.
+You want to pass the an spatExtent to limit the data downloaded.
+Invalid extent because the HLS scene is in UTM
+(TODO: reproject extent to UTM)
+
+First, let's get the Green band:
+
+```{r}
+band_green <- rast(paste0('/vsicurl/', urls[1])) 
+utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
+band_green_crop <- crop(band_green, utm_extent)
+
+#band_green <- rast(paste0('/vsicurl/',urls[1]), win=extent, snap="in") 
+```
+
+Now let's get the IR and Red bands:
+```{r}
+band_ir <- rast(paste0('/vsicurl/', urls[25]), win=utm_extent)
+band_red <- rast(paste0('/vsicurl/', urls[13]), win=utm_extent)
+```
+
+We can calculate Normalized Difference Water Index (NDWI) as: 
+NDWI = (Green – NIR)/(Green + NIR)
+
+We can write a function in R to calcuate any normalized difference index. 
+
+```{r}
+normdiff <- function(x, y) {
+  (x - y) / (x + y)
+}
+```
+
+We just need to know which band to submit for the x and y inputs to toggle between indexes like NDWI and NDVI (normalized difference vegetation index).
+```{r}
+ndwi = normdiff(band_green_crop, band_ir) 
+ndvi = normdiff(band_ir, band_red)
+```
+
+Let's look at the histogram of NDWI to understand the output better:
+```{r}
+hist(ndwi, breaks = 40)
+```
+
+Now let's look at the summary of the values in our NDWI raster:
+```{r}
+summary(ndwi) #<-- ok, so there's some weirdness here
+```
+
+
+```{r}
+hist(band_green_crop, breaks = 40)
+```
+
+```{r}
+hist(ndvi, breaks = 40)
+```
+
+```{r}
+summary(ndvi)
+```
+
+
+
+# PLOT HSL ----------------------------------------------------------------
+
+
+In this section, we'll plot the data we've downloaded and calculated. We'll combine plots and apply color palettes. 
+
+## Plot NDWI
+
+Make a layout with one big figure at the top and two smaller figures below. The first figure takes up 4 cells in the matrix.
+
+```{r}
+layout(matrix(c(1,1,1,1,2,3), ncol=2, nrow=3, byrow=TRUE))
+```
+
+We'll call three different plots to fill in the slots in our layout:
+```{r}
+# 1
+plot(ndwi, main="NDWI", range=c(-1,1), col=brewer.pal(name='Blues', n=9)) # the range parameter limits the plot to just values in the interval you give - good to filtering out outliers (which happen especially over the ocean)
+# 2
+plot(band_green_crop, main = "Green", col=brewer.pal(name='Greens', n=9))
+# 3
+plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=9))
+```
+
+We'll do a similar process for the NDVI analysis:
+
+```{r}
+# Plot NDVI
+layout(matrix(c(1,1,1,1,2,3), ncol=2, nrow=3, byrow=TRUE))
+
+# 1
+plot(ndvi, main="NDVI", range=c(-1,1), col=brewer.pal(name='Greens', n=9))
+# 2
+plot(band_red, main = "Red", col=brewer.pal(name='YlOrRd', n=9))
+# 3
+plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=9))
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Citations & Further Reaading
+
+[rstac Example](https://brazil-data-cube.github.io/rstac/)
+
+[rstac Documentation](https://brazil-data-cube.github.io/rstac/reference/index.html)
+
+[r-spatial STAC](https://r-spatial.org/r/2021/04/23/cloud-based-cubes.html)
+
+[stac spec tutorial on querying](https://stacspec.org/en/tutorials/2-using-rstac-and-cql2-to-query-stac-api/)
+
+[stac spec tutorial on downloading data](https://stacspec.org/en/tutorials/1-download-data-using-r/)
+
+[Getting Started with Cloud-Native Harmonized Landsat Sentinel-2 (HLS) Data in R](https://lpdaac.usgs.gov/resources/e-learning/getting-started-with-cloud-native-harmonized-landsat-sentinel-2-hls-data-in-r/)
