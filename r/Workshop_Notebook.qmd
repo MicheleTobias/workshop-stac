@@ -34,12 +34,6 @@ To get access to NASA Earthdata, we need to do the following steps:
 
 1.  Sign up for an Earthdata Login account: <https://urs.earthdata.nasa.gov/>
 
-2.  NASA uses a NetRC File to provide authentication information (username and password) when you download data. To set up your NetRC file, you'll need to do the following:
-
-    A. Write your NetRC file using this script from NASA: <https://git.earthdata.nasa.gov/projects/LPDUR/repos/hls_tutorial_r/browse/Scripts/earthdata_netrc_setup.R> It writes a text file with your user name and password to your user home directory
-
-    B. Configure GDAL: <https://stackoverflow.com/questions/71605910/how-do-i-use-the-terra-r-package-with-cloud-optimized-geotiffs-requiring-authent>
-
 ### Install and Load Libraries
 
 First, we need to install any R libraries we want to use. Next, we need to load those libraries. You might assume that if we install the library, we want to use it, but R doesn't automatically load libraries you just installed.
@@ -118,7 +112,7 @@ edl_set_token(username = earthdata_username, password = earthdata_password)
 
 ## Search Harmonized Lansat Sentinel (HSL) Data
 
-First, we need to connect to the Landsat STAC catalog endpoint
+First, we need to connect to the Landsat STAC catalog endpoint.
 
 ```{r}
 nasa_stac <- stac("https://cmr.earthdata.nasa.gov/stac/LPCLOUD")
