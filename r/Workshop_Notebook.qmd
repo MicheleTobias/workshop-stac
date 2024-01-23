@@ -63,7 +63,8 @@ GDAL is the library that allows your computer to read many spatial data formats 
 ```{r}
 # configuration for GDAL to work with the NetRC file
 setGDALconfig("GDAL_HTTP_UNSAFESSL", "YES")
-setGDALconfig("GDAL_HTTP_COOKIEFILE", ".rcookies") 
+setGDALconfig("GDAL_HTTP_COOKIEFILE", ".rcookies")
+# GDAL optimization for working with cloud-optimized data
 setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
 setGDALconfig("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "TIF") 
 ```
@@ -78,21 +79,18 @@ edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"),
                            password = Sys.getenv("EARTHDATA_PASSWORD"),
                            token_number = 1
 ) {
-  #set the base URL (the first part of the website's URL)
   base <- 'https://urs.earthdata.nasa.gov'
-  
   list_tokens <- "/api/users/tokens"
-  
   pw <- openssl::base64_encode(paste0(username, ":", password))
-  
   resp <- httr::GET(paste0(base,list_tokens),
                     httr::add_headers(Authorization= paste("Basic", pw)))
-  
-  p <- httr::content(resp, "parsed")[[token_number]]
-  
-  if(is.null(p$access_token)) {
+  token_resp <- httr::content(resp, "parsed") 
+  if(length(token_resp) > 0){
+    p <- token_resp[[token_number]]
+  }
+  else {
     request_token <- "/api/users/token"
-    resp <- httr::GET(paste0(base,request_token),
+    resp <- httr::POST(paste0(base,request_token),
                       httr::add_headers(Authorization= paste("Basic", pw)))
     p <- httr::content(resp, "parsed")
   }
@@ -105,7 +103,7 @@ edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"),
 Now the code asks for our credentials.
 
 ```{r}
-earthdata_username <- getPass("Earthdata Username:")
+earthdata_username <- getPass("Earthdata User:")
 
 earthdata_password <- getPass("Earthdata Password:")
 
@@ -129,6 +127,7 @@ nasa_stac <- stac("https://cmr.earthdata.nasa.gov/stac/LPCLOUD")
 Now let's define our geographic area of interest as the area that includes 10 Mile Dunes:
 
 ```{r}
+# minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
 bbox = c( -123.824405, 39.485343, -123.748531, 39.556319)
 extent = ext(c(bbox[1],bbox[3],bbox[2],bbox[4]))
 
@@ -139,13 +138,10 @@ Set our search parameters
 
 ```{r}
 search_hls <- stac_search(
-  q = nasa_stac,
-  #collections = "landsat-c2l2-sr", #	Landsat Collection 2 Level-2 UTM Surface Reflectance (SR) Product
+  q = nasa_stac, # The STAC API url
   collections = "HLSS30.v2.0", # https://hls.gsfc.nasa.gov/products-description/s30/
-  ids = NULL,
-  bbox = bbox,  # minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
+  bbox = bbox, 
   datetime = "2023-06-01T00:00:00Z/2023-07-30T00:00:00Z",  # A closed interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z" 
-  intersects = NULL,
   limit = 100
 )
 ```
@@ -182,6 +178,14 @@ What assets are available for a given item? [More Information](https://lpdaac.us
 names(results_hls$features[[1]]$assets)
 ```
 
+Now we can filter our results to only include scenes with low cloud cover.
+
+```{r}
+results_hls <- items_filter(results_hls, properties$`eo:cloud_cover` < 10)
+
+results_hls
+```
+
 # ANALYSIS Using HLS
 
 Normalized Difference Vegetation Index (NDVI) is an index commonly used to investigate vegetation health. You may already be familiar with this tool. Another similar index, Normalized Difference Water Index (NDWI), is used to understand the water content of plants or soils in remotely sensed imagery. It might seem counter-intuitive, but sandy dunes hold a lot of water. We'll use NDWI to help us differentiate the dunes from other substrate in our images.
@@ -196,7 +200,7 @@ items <- assets_select(results_hls,
                          "B03", #green: 0.53 – 0.59
                          "B8A", #NIR narrow: 0.85 – 0.88
                          "B04"  #red: 0.64 – 0.67
-                         ))
+                      ))
 ```
 
 Now we'll get the URLs for the assets. URLs are how we'll request the assets from the API.
@@ -209,23 +213,32 @@ urls
 
 To decide which of these items we want to download, we need to glean information from the file names in the URLs. The letter B followed by a number (or alphanumeric code) tells us the band number. Another part of the file name contains the year.
 
-First, let's get the Green band:
+We can also see that there are 3 bands per scene. To work with one scene we can filter down that url list to single STAC Item.
+
+```{r}
+urls<-assets_url(items$features[[1]])
+
+urls
+```
+
+First, let's configure the Green band:
 
 ```{r}
 band_green <- rast(paste0('/vsicurl/', urls[1])) 
-utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
-band_green_crop <- crop(band_green, utm_extent)
-
-
-
-#band_green <- rast(paste0('/vsicurl/',urls[1]), win=extent, snap="in") 
 ```
 
-Now let's get the IR and Red bands:
+Now, we need to read only the extent that matches the bounding box. However there's a slight catch, we need to convert the extent to the same projection as the source data before we read.
 
 ```{r}
-band_ir <- rast(paste0('/vsicurl/', urls[25]), win=utm_extent)
-band_red <- rast(paste0('/vsicurl/', urls[13]), win=utm_extent)
+utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
+band_green_crop <- crop(band_green, utm_extent)
+```
+
+Now let's get the IR and Red bands too:
+
+```{r}
+band_red <- rast(paste0('/vsicurl/', urls[2]), win=utm_extent)
+band_ir <- rast(paste0('/vsicurl/', urls[3]), win=utm_extent)
 ```
 
 We can calculate Normalized Difference Water Index (NDWI) as:
@@ -279,7 +292,7 @@ hist(ndvi, breaks = 40)
 summary(ndvi)
 ```
 
-# PLOT HSL 
+# PLOT HSL
 
 In this section, we'll plot the data we've downloaded and calculated. We'll combine plots and apply color palettes.
 
