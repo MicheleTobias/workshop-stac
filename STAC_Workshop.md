@@ -36,28 +36,23 @@ We use STAC to organize a large number of files. This organization method makes 
 
 STAC is organized through a series of hierarchical entities. Let's look at some of these entities:
 
-* Asset - a single file
-* Item - one or more Assets that contain data about the same place in time (e.g. multiple bands from the same capture) - aka Scenes. 
+* Asset - a single file, such as a single band of a satellite image
+* Item - one or more Assets that contain data about the same place in time such as a satellite image with multiple bands.
 * Collection - one or more Items that have shared characteristics (e.g. same Sensor, processing level, or product)
 * Catalog - one or more Collections (e.g. Landsat7 and Landsat8 collections are both in the USGS catalog)
 * STAC API - a web url for searching a STAC Catalog using computer software or code.  (API = Application Programming Interface)
 
-https://stacspec.org/en/tutorials/intro-to-stac/
+Learn more: https://stacspec.org/en/tutorials/intro-to-stac/
 
 ### Cloud Optimized GeoTIFF (COG)
 
-What is a GeoTIFF? Why do you want to work with this?
-
-Based on the Image filetype TIFF, a GeoTiff adds spatial reference metadata to the image allowing you to store regularly gridded data, aka raster data. This lets you load data in geospatial software and know where in the world the data is and how much ground each pixel represents. 
+Cloud Optimized GeoTIFF (COG) is a common file format stored in a STAC catalog. The GeoTiff format adds spatial reference metadata to the TIFF image foramt allowing you to store regularly gridded data, aka raster data, that is referenced to the earth. This lets you load data in geospatial software and know where in the world the data is and how much ground each pixel represents. 
 
 What does "Cloud Optimized" mean? Why is this helpful?
 
-The data inside the file is organized to allow easier and faster access to portions, or chunks, of data. This allows you to only read the part of data you need instead of the whole file.
+The data inside the file is organized to allow easier and faster access to portions, or chunks, of data. This allows you to only read the part of data you need instead of the whole file. This is great news for people with small study areas or study areas that cross multiple satellite scenes!
 
-![](img/COG_partial_overlap.png)
-Example from: [NASA MAAP](https://docs.maap-project.org/en/latest/technical_tutorials/access/accessing_cod.html)
-
-This is helpful: [Cloud-Optimized Geospatial Formats Guide](https://guide.cloudnativegeo.org/) - probably because one of the authors looks very familiar!
+Even more information: [Cloud-Optimized Geospatial Formats Guide](https://guide.cloudnativegeo.org/) 
 
 
 ### More detail about APIs in general and STAC API specifically
