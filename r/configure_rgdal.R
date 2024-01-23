@@ -1,4 +1,4 @@
-#GOAL: configure rgdal to download data from a STAC with the terra package
+#GOAL: configure gdal to download data from a STAC with the terra package
 
 
 # Citation: https://stackoverflow.com/questions/71605910/how-do-i-use-the-terra-r-package-with-cloud-optimized-geotiffs-requiring-authent 

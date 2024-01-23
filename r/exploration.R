@@ -27,6 +27,7 @@
 library(rstac) 
 library(terra)
 library(httr)
+library(getPass)
 library(RColorBrewer)
 
 # configuration for GDAL to work with the NetRC file
@@ -38,6 +39,9 @@ setGDALconfig("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "TIF")
 
 
 # AUTHENTICATE NASA EARTHDATA ----------------------------------------------------
+# Code adapted from  Carl Boettiger https://gist.github.com/cboettig/5401bd149a2a27bde2042aa4f7cde25b
+# This uses your NASA Earth Data account to register for an access token.
+# Then stores that token in your code for use in the current script.
 
 edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"), 
                            password = Sys.getenv("EARTHDATA_PASSWORD"),
@@ -48,11 +52,13 @@ edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"),
   pw <- openssl::base64_encode(paste0(username, ":", password))
   resp <- httr::GET(paste0(base,list_tokens),
                     httr::add_headers(Authorization= paste("Basic", pw)))
-  p <- httr::content(resp, "parsed")[[token_number]]
-  
-  if(is.null(p$access_token)) {
+  token_resp <- httr::content(resp, "parsed") 
+  if(length(token_resp) > 0){
+    p <- token_resp[[token_number]]
+  }
+  else {
     request_token <- "/api/users/token"
-    resp <- httr::GET(paste0(base,request_token),
+    resp <- httr::POST(paste0(base,request_token),
                       httr::add_headers(Authorization= paste("Basic", pw)))
     p <- httr::content(resp, "parsed")
   }
@@ -61,8 +67,9 @@ edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"),
   invisible(header)
 }
 
-earthdata_username <- readline("Earthdata Username:")
-earthdata_password <- readline("Earthdata Password:")
+# Use the above function to get the token
+earthdata_username <- getPass::getPass("Earthdata Username:")
+earthdata_password <- getPass::getPass("Earthdata Password:")
 
 edl_set_token(username = earthdata_username, password = earthdata_password)
 
@@ -71,26 +78,27 @@ edl_set_token(username = earthdata_username, password = earthdata_password)
 
 ## https://lpdaac.usgs.gov/resources/e-learning/getting-started-with-cloud-native-harmonized-landsat-sentinel-2-hls-data-in-r/
 
-# connect to the landsat stac catalog endpoint
+# Connect to the LP DAAC STAC catalog endpoint via NASA CMR
 nasa_stac <- stac("https://cmr.earthdata.nasa.gov/stac/LPCLOUD")
 
 
+# Define the bounding box for area of interest
+# minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
 bbox = c( -123.824405, 39.485343, -123.748531, 39.556319)
 extent = ext(c(bbox[1],bbox[3],bbox[2],bbox[4]))
 
-#set up the search parameters
+# Set up the search parameters
 search_hls <- stac_search(
   q = nasa_stac,
-  #collections = "landsat-c2l2-sr", #	Landsat Collection 2 Level-2 UTM Surface Reflectance (SR) Product
   collections = "HLSS30.v2.0", # https://hls.gsfc.nasa.gov/products-description/s30/
-  ids = NULL,
-  bbox = bbox,  # minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
+  ids = NULL, # if you had specific scenes to find 
+  bbox = bbox,  
   datetime = "2023-06-01T00:00:00Z/2023-07-30T00:00:00Z",  # A closed interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z" 
-  intersects = NULL,
+  intersects = NULL, # ?
   limit = 100
 )
 
-# run the search, NASA needs a post not get for some reason
+# run the search, NASA needs a POST type request
 results_hls <- post_request(search_hls)
 
 # see what the results are from our search
@@ -104,15 +112,17 @@ results_hls$features[[1]]$properties$`eo:cloud_cover`
 
 
 # what assets are available for a given item?
-names(results_hls$features[[1]]$assets)
+# more details about assets: 
 # https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions
+
+names(results_hls$features[[1]]$assets)
 
 
 
 
 # ANALYSIS HLS ----------------------------------------------------------------
 
-# Items have assets - example: item = photo, asset = a specific band
+# Items have assets - example: item = scene, asset = a specific band
 items <- assets_select(results_hls,
                        asset_names = c(
                          "B03", #green: 0.53 – 0.59
@@ -123,17 +133,21 @@ items <- assets_select(results_hls,
 # get the URLs for the assets
 urls<-assets_url(items)
 
-# setup Rasters as part of a scene
-# The data is read until you try to calculate or plot values
+# Setup a Terra raster object based on the Asset URL
+# The data is not read until you try to calculate or plot values
 
 band_green <- rast(paste0('/vsicurl/', urls[1])) 
-utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
-band_green_crop <- crop(band_green, utm_extent)
-#you want to pass the an spatExtent to limit the data downloaded
-#invalid extent because the HLS scene is in UTM
-# TODO: reproject extent to UTM
-#band_green <- rast(paste0('/vsicurl/',urls[1]), win=extent, snap="in") 
 
+# you want to pass the an spatExtent to limit the data downloaded
+# the current extent is in a different projection than then HLS scene 
+# lat/lon WGS84 vs UTM Zone ?
+# Reproject the extent to match the data
+utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
+
+# Load the limited extent from the source URL
+band_green_crop <- crop(band_green, utm_extent)
+
+# Do the same for the other Bands, Near Infrared and Red
 band_ir <- rast(paste0('/vsicurl/', urls[25]), win=utm_extent)
 band_red <- rast(paste0('/vsicurl/', urls[13]), win=utm_extent)
 
