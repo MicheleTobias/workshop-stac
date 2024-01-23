@@ -55,9 +55,6 @@ library(getPass)        # allows us to give the code our password without it pri
 GDAL is the library that allows your computer to read many spatial data formats and can translate one format to another (for example, you can read a shapefile into your code and save it as a geopackage thanks to GDAL). We need to change some of the settings in the way the library works for this R session. Don't worry; it won't change how GDAL works with your other geospatial programs.
 
 ```{r}
-# configuration for GDAL to work with the NetRC file
-setGDALconfig("GDAL_HTTP_UNSAFESSL", "YES")
-setGDALconfig("GDAL_HTTP_COOKIEFILE", ".rcookies")
 # GDAL optimization for working with cloud-optimized data
 setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
 setGDALconfig("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "TIF") 
@@ -122,7 +119,9 @@ Now let's define our geographic area of interest as the area that includes 10 Mi
 
 ```{r}
 # minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
+# We need bbox defined for STAC queries
 bbox = c( -123.824405, 39.485343, -123.748531, 39.556319)
+# Later we'll need the same bbox as a Terra extent object for reading data
 extent = ext(c(bbox[1],bbox[3],bbox[2],bbox[4]))
 
 plot(extent, col="lightblue") #ok, not that interesting, but we know it plots a bounding box
@@ -218,7 +217,7 @@ urls
 First, let's configure the Green band:
 
 ```{r}
-band_green <- rast(paste0('/vsicurl/', urls[1])) 
+band_green <- rast(urls[1], vsi=TRUE) 
 ```
 
 Now, we need to read only the extent that matches the bounding box. However there's a slight catch, we need to convert the extent to the same projection as the source data before we read.
@@ -231,8 +230,8 @@ band_green_crop <- crop(band_green, utm_extent)
 Now let's get the IR and Red bands too:
 
 ```{r}
-band_red <- rast(paste0('/vsicurl/', urls[2]), win=utm_extent)
-band_ir <- rast(paste0('/vsicurl/', urls[3]), win=utm_extent)
+band_red <- rast(urls[2], vsi=TRUE, win=utm_extent)
+band_ir <- rast(urls[3], vsi=TRUE, win=utm_extent)
 ```
 
 We can calculate Normalized Difference Water Index (NDWI) as:
