@@ -138,10 +138,11 @@ urls<-assets_url(items)
 
 band_green <- rast(paste0('/vsicurl/', urls[1])) 
 
-# you want to pass the an spatExtent to limit the data downloaded
+# you want to pass the a Terra::spatExtent object to limit the data downloaded
 # the current extent is in a different projection than then HLS scene 
-# lat/lon WGS84 vs UTM Zone ?
+# lat/lon WGS84 (aka epsg:4326) vs UTM Zone 10N (aka epsg:32610)
 # Reproject the extent to match the data
+# We don't hard code the data projection because it can change from scene to scene
 utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
 
 # Load the limited extent from the source URL
