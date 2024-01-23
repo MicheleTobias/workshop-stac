@@ -68,8 +68,8 @@ edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"),
 }
 
 # Use the above function to get the token
-earthdata_username <- getPass::getPass("Earthdata Username:")
-earthdata_password <- getPass::getPass("Earthdata Password:")
+earthdata_username <- getPass::getPass("Earthdata User", forcemask = T)
+earthdata_password <- getPass::getPass("Earthdata Password", forcemask = T)
 
 edl_set_token(username = earthdata_username, password = earthdata_password)
 
