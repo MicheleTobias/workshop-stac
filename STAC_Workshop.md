@@ -11,30 +11,30 @@ last update: 2023-12-05
 
 ## Introduction
 
-What are we generally trying to learn?
+Spatiotemporal asset catalogs (STAC) are growing in popularity as a way to make data available in a standardized way, but getting started with these tools is not always straight forward or clear to people who did not set them up. In this workshop, we hope to demystify working with STAC catalogs. Learn how to connect to, search, and download data from a STAC in R.
 
-How to search online data catalogs for spatial data and access the data efficiently with software. In this case R code you write yourself.
+By the end of the workshop, participants will be familiar with STAC terminology, be able to connect to a STAC, and search and downlaod STAC data.
 
-Why does it matter? Why do it this way vs. downloading images and storing them yourself?
+You may already be familiar with online catalogs like [USGS EarthExplorer](https://earthexplorer.usgs.gov/) for exploring and downloading aerial imagery. Many of these website-based catalogs are difficult to use, especially if you need to download a lot of data, but they work once you get used to them. So why take the time to learn how to access STAC catalogs through code? 
 
-- Using a catalog lets you: 
-    - update or modify your query
-    - filter based on metadata
-    - adds reproducability. (See also [FAIR](https://www.go-fair.org/fair-principles/))
-- Reduce the amount of data you need to download, manage, and store.
-- (Optional) move your computation closer to the data. (e.g if the data is on AWS you could run your compute on AWS)
+Using a catalog lets you: 
+- update or modify your query and easily run it again
+- filter based on metadata - you can access all of the metadat,not just what the web designer decided to include
+- increase the reproducability (see also [FAIR](https://www.go-fair.org/fair-principles/)) of your project because the code documents what you did
+- Reduce the amount of data you need to download, manage, and store. You can always download the data again so you can delegate the storage to the organization that produced the data.
+- (we won't cover this today but...) move your computation closer to the data. (e.g if the data is on AWS you could run your compute on AWS) - i.e. keep your code and the data together in the cloud
 
 
 ## SpatioTemporal Asset Catalogs (STAC)
 
 ### What is it?
 
-A standard way of describing geospatial data in a computer oriented, but still human readable format (JSON). It was originally created to catalog large amounts of Satellite based Earth Observation data.
+SpatioTemporal Asset Catalogs (STAC) provide a standard way of describing geospatial data in a computer-oriented, but still human readable, format (JSON). It was originally created to catalog large amounts of Satellite based Earth Observation data.
 
 ### Why is it useful?
-We use STAC to organize a large number of files and make it possible to search for which files are needed for a given analysis and then pass the results to the analysis tools. The key is that STAC describes what to expect inside a file and where to find the file in a way that can be passed to computer code or programs that need to access the data.
+We use STAC to organize a large number of files. This organization method makes it possible to search for the files  needed for a given analysis and then pass the results to the analysis tools. STAC describes what to expect inside a file and where to find the file in a way that can be passed to computer code or programs that need to access the data. STAC is a way to organize data that makes it easy for both people and computers to find and use data.
 
-Define: 
+STAC is organized through a series of hierarchical entities. Let's look at some of these entities:
 
 * Asset - a single file
 * Item - one or more Assets that contain data about the same place in time (e.g. multiple bands from the same capture) - aka Scenes. 
