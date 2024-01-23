@@ -110,6 +110,9 @@ results_hls$features[[1]]
 # You can see where the cloud cover is in the STAC record to filter
 results_hls$features[[1]]$properties$`eo:cloud_cover`
 
+# We can filter our results based on the cloud cover less than 10
+results_hls <- items_filter(results_hls, properties$`eo:cloud_cover` < 10)
+# This reduces the results from 12 to 4
 
 # what assets are available for a given item?
 # more details about assets: 
