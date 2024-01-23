@@ -53,7 +53,7 @@ library(earthdatalogin) # let's us authenticate to access NASA data
 
 ### Configure the GDAL Library
 
-GDAL is the library that allows your computer to read many spatial data formats and can translate one format to another (for example, you can read a shapefile into your code and save it as a geopackage thanks to GDAL). We need to change some of the settings in the way the library works for this R session. Don't worry; it won't change how GDAL works with your other geospatial programs.
+GDAL is the library that allows your computer to read many spatial data formats and can translate one format to another (for example, you can read a shapefile into your code and save it as a geopackage thanks to GDAL). We need to change some of the settings in the way the library works for this R session. These are performance modifications for using internet files. You can read about on the [GDAL documentation](https://gdal.org/user/configoptions.html). Don't worry; it won't change how GDAL works with your other geospatial programs.
 
 ```{r}
 # GDAL optimization for working with cloud-optimized data
