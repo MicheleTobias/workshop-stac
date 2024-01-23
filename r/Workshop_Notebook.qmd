@@ -40,7 +40,7 @@ First, we need to install any R libraries we want to use. Next, we need to load 
 
 ```{r}
 # Install Packages
-#install.packages(c("rstac", "terra", "httr", "RColorBrewer", "getPass"))
+#install.packages(c("rstac", "terra", "httr", "RColorBrewer", "getPass", "earthdatalogin"))
 
 # Load Libraries
 library(rstac)          # interact with stac catalogs
@@ -48,16 +48,14 @@ library(terra)          # work with raster data
 #library(httr)           # gets information from webpages
 library(RColorBrewer)   # color pallets from Color Brewer, a library of colors designed for optimized readability in cartograhy
 library(getPass)        # allows us to give the code our password without it printing to the console
+library(earthdatalogin) # let's us authenticate to access NASA data
 ```
 
 ### Configure the GDAL Library
 
-GDAL is the library that allows your computer to read many spatial data formats and can translate one format to another (for example, you can read a shapefile into your code and save it as a geopackage thanks to GDAL). We need to change some of the settings in the way the library works for this R session. Don't worry; it won't change how GDAL works with your other geospatial programs.
+GDAL is the library that allows your computer to read many spatial data formats and can translate one format to another (for example, you can read a shapefile into your code and save it as a geopackage thanks to GDAL). We need to change some of the settings in the way the library works for this R session. These are performance modifications for using internet files. You can read about on the [GDAL documentation](https://gdal.org/user/configoptions.html). Don't worry; it won't change how GDAL works with your other geospatial programs.
 
 ```{r}
-# configuration for GDAL to work with the NetRC file
-setGDALconfig("GDAL_HTTP_UNSAFESSL", "YES")
-setGDALconfig("GDAL_HTTP_COOKIEFILE", ".rcookies")
 # GDAL optimization for working with cloud-optimized data
 setGDALconfig("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
 setGDALconfig("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "TIF") 
@@ -67,38 +65,10 @@ setGDALconfig("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "TIF")
 
 "Authenticate" is a fancy word meaning "log in" or "prove you should have access". We'll do this by making a function that uses your Earthdata username and password. We've set up the code to ask you for these items so you don't have to store them in code that might be shared in public repositories. But this means you'll need to pay attention and set it here or the rest of the code won't run (because you won't be authenticated).
 
-```{r}
-
-edl_set_token <- function (username = Sys.getenv("EARTHDATA_USER"), 
-                           password = Sys.getenv("EARTHDATA_PASSWORD"),
-                           token_number = 1
-) {
-  base <- 'https://urs.earthdata.nasa.gov'
-  list_tokens <- "/api/users/tokens"
-  pw <- openssl::base64_encode(paste0(username, ":", password))
-  resp <- httr::GET(paste0(base,list_tokens),
-                    httr::add_headers(Authorization= paste("Basic", pw)))
-  token_resp <- httr::content(resp, "parsed") 
-  if(length(token_resp) > 0){
-    p <- token_resp[[token_number]]
-  }
-  else {
-    request_token <- "/api/users/token"
-    resp <- httr::POST(paste0(base,request_token),
-                      httr::add_headers(Authorization= paste("Basic", pw)))
-    p <- httr::content(resp, "parsed")
-  }
-  header = paste("Authorization: Bearer", p$access_token)
-  Sys.setenv("GDAL_HTTP_HEADERS"=header)
-  invisible(header)
-}
-```
-
-Now the code asks for our credentials.
+First the code asks for our credentials.
 
 ```{r}
 earthdata_username <- getPass("Earthdata User:")
-
 earthdata_password <- getPass("Earthdata Password:")
 
 # note: use the function readline() if you want to be able to see your inputs... we need to mask the instructors' credentials for the broadcast.
@@ -107,12 +77,20 @@ earthdata_password <- getPass("Earthdata Password:")
 Now we run the authentication function inputting our username and password:
 
 ```{r}
-edl_set_token(username = earthdata_username, password = earthdata_password)
+earthdatalogin::edl_netrc(username = earthdata_username, password = earthdata_password)
 ```
 
 ## Search Harmonized Lansat Sentinel (HSL) Data
 
 First, we need to connect to the Landsat STAC catalog endpoint.
+
+<https://cmr.earthdata.nasa.gov/stac/LPCLOUD>
+
+How did we find this url?
+
+Finding the data on NASA EarthData Search <https://search.earthdata.nasa.gov/search?q=C2021957295-LPCLOUD>
+
+This told us the name of the collection and which DAAC it's hosted at, LPDAAC, whose catalog is listed on <https://cmr.earthdata.nasa.gov/stac> as LPCLOUD
 
 ```{r}
 nasa_stac <- stac("https://cmr.earthdata.nasa.gov/stac/LPCLOUD")
@@ -122,25 +100,27 @@ Now let's define our geographic area of interest as the area that includes 10 Mi
 
 ```{r}
 # minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
+# We need bbox defined for STAC queries
 bbox = c( -123.824405, 39.485343, -123.748531, 39.556319)
+# Later we'll need the same bbox as a Terra extent object for reading data
 extent = ext(c(bbox[1],bbox[3],bbox[2],bbox[4]))
 
 plot(extent, col="lightblue") #ok, not that interesting, but we know it plots a bounding box
 ```
 
-Set our search parameters
+Set our STAC search parameters: STAC url, collection name, bbox, time interval, and limit how many items we can find.
 
 ```{r}
 search_hls <- stac_search(
   q = nasa_stac, # The STAC API url
-  collections = "HLSS30.v2.0", # https://hls.gsfc.nasa.gov/products-description/s30/
+  collections = "HLSS30.v2.0", # https://lpdaac.usgs.gov/products/hlss30v002/
   bbox = bbox, 
   datetime = "2023-06-01T00:00:00Z/2023-07-30T00:00:00Z",  # A closed interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z" 
   limit = 100
 )
 ```
 
-Run the search. (Note: NASA needs a "post" not "get" for some reason.)
+Run the search. (Note: NASA's STAC needs a "post", many other STAC servers can use "get" requests.)
 
 ```{r}
 results_hls <- post_request(search_hls)
@@ -166,13 +146,13 @@ We can see what the cloud cover property is called in the STAC record based on t
 results_hls$features[[1]]$properties$`eo:cloud_cover`
 ```
 
-What assets are available for a given item? [More Information](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions) You can think of "assets" as bands of an image or different layers of information.
+What assets are available for a given item? USGS has [more information](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions) on the HLS website. You can think of "assets" as bands of an image or different layers of information.
 
 ```{r}
 names(results_hls$features[[1]]$assets)
 ```
 
-Now we can filter our results to only include scenes with low cloud cover.
+Now we can filter our results to only include scenes with low cloud cover by filtering the metadata returned in our search.
 
 ```{r}
 results_hls <- items_filter(results_hls, properties$`eo:cloud_cover` < 10)
@@ -217,11 +197,13 @@ urls
 
 First, let's configure the Green band:
 
+(Note: `vsi=TRUE` tells Terra that the file path is a URL not a local file)
+
 ```{r}
-band_green <- rast(paste0('/vsicurl/', urls[1])) 
+band_green <- rast(urls[1], vsi=TRUE) 
 ```
 
-Now, we need to read only the extent that matches the bounding box. However there's a slight catch, we need to convert the extent to the same projection as the source data before we read.
+Now, we need to read only the extent that matches the bounding box. However there's a slight catch, we need to convert the extent to the same projection as the HLS scene before we read.
 
 ```{r}
 utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
@@ -231,8 +213,8 @@ band_green_crop <- crop(band_green, utm_extent)
 Now let's get the IR and Red bands too:
 
 ```{r}
-band_red <- rast(paste0('/vsicurl/', urls[2]), win=utm_extent)
-band_ir <- rast(paste0('/vsicurl/', urls[3]), win=utm_extent)
+band_red <- rast(urls[2], vsi=TRUE, win=utm_extent)
+band_ir <- rast(urls[3], vsi=TRUE, win=utm_extent)
 ```
 
 We can calculate Normalized Difference Water Index (NDWI) as:
@@ -286,7 +268,7 @@ hist(ndvi, breaks = 40)
 summary(ndvi)
 ```
 
-# PLOT HSL
+# PLOT HLS
 
 In this section, we'll plot the data we've downloaded and calculated. We'll combine plots and apply color palettes.
 
