@@ -316,7 +316,7 @@ plot(band_ir, main = "IR", col=brewer.pal(name='YlOrRd', n=9))
 
 ```
 
-The dunes don't have a lot of green vegetation,s o they look lighter than the surrounding areas. Beach and dune vegetation tend to be more silver or gray in color to reflect excess light, like many Mediterranean plant species growing in harsh condition. However, this means they have reflectance properties more similar to sand than plants so even when vegetation is present, it's hard to find with NDVI.
+The dunes don't have a lot of green vegetation, so they look lighter than the surrounding areas. Beach and dune vegetation tend to be more silver or gray in color to reflect excess light, like many Mediterranean plant species growing in harsh condition. However, this means they have reflectance properties more similar to sand than plants so even when vegetation is present, it's hard to find with NDVI.
 
 ## Citations & Further Reaading
 
