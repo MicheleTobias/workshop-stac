@@ -55,38 +55,33 @@ The data inside the file is organized to allow easier and faster access to porti
 Even more information: [Cloud-Optimized Geospatial Formats Guide](https://guide.cloudnativegeo.org/) 
 
 
-### More detail about APIs in general and STAC API specifically
+### Interacting with a STAC Catalog Through an API
 
-An Application Programming Interface (API) is a set of commands that a service knows how to respond to. You can think of it just like Library of Functions in programming. Each Function takes some set of required and optional arguments and then returns results. In the case of a web API, there's a unique url to each function, and a portion of the url that contains the arguments (aka parameters).
+An Application Programming Interface (API) is a set of commands that a service knows how to respond to. You can think of it just like Library of Functions in programming. Each Function takes some set of required and optional arguments and then returns results. Web APIs typically follow a similar structure: they have a base URL (the website you connect to) followed by arguments (or parameters) that tell the website what information you want to know. Arguments might indicate which endpoint (think of this as a table or databases of data) you want to search, maybe a date range, or how much cloud cover is acceptable. Each API endpoint will have specific information you can ask for. You might think of it like a table with columns.
 
-Some examples - you can open these in a web browser the response will be a GeoJSON.
+Let's look at some examples from the Microsoft Pllanetary Computer. You can open the links below in a web browser. The response will be text in GeoJSON format. It's note necessarily very easy to read, but you can if you want.
 
-List collections in the Catalog
+List collections in the Catalog by connecting to the collections endpoint: https://planetarycomputer.microsoft.com/api/stac/v1/collections
 
-https://planetarycomputer.microsoft.com/api/stac/v1/collections
+- Base URL: https://planetarycomputer.microsoft.com/api/stac/v1/
+- API Endpoint: collections
 
-```
-Base URL: https://planetarycomputer.microsoft.com/api/stac/v1/
-API Endpoint: collections:
-```
 
-List items in the specified Collection
+List items in the specified Collection: https://planetarycomputer.microsoft.com/api/stac/v1/collections/3dep-lidar-dsm/items
 
-https://planetarycomputer.microsoft.com/api/stac/v1/collections/3dep-lidar-dsm/items
-```
-API Endpoint: collections
-Arguments:  3dep-lidar-dsm, items
-```
-This asks for items that are part of 3dep-lidar-dsm, if I left off the items part, it would just give me information about the collection.
+- API Endpoint: collections
+- Arguments:  3dep-lidar-dsm, items
 
-Search
+This asks for items that are part of `3dep-lidar-dsm`, if we left off the items parameter, it would return information about the collection.
 
-https://planetarycomputer.microsoft.com/api/stac/v1/search?collections=3dep-lidar-dsm&bbox=-124.41060660766607,32.5342307609976,-114.13445790587905,42.00965914828148&limit=25
-```
-API Endpoint: search
-Arguments/Parameters: collections, bbox, limit
-```
-Each named argument or parameter has a value passed in... in R this might look like
+Search for a specific geographic area: https://planetarycomputer.microsoft.com/api/stac/v1/search?collections=3dep-lidar-dsm&bbox=-124.41060660766607,32.5342307609976,-114.13445790587905,42.00965914828148&limit=25
+
+- API Endpoint: search
+- Arguments/Parameters: collections, bbox, limit
+
+
+We've been looking at API examples that work in our web browser to get an idea of how APIs work. But we'll be working in R. You'll see when we start coding that often R packages that work with APIs will translate the parameters to function arguments and in the underlying code, they will build the URL to send to the API. In R, this might look like:
+
 ```
 search(collections=..., bbox=..., limit=...)
 ```
@@ -115,14 +110,7 @@ search(collections=..., bbox=..., limit=...)
 
 ## Links to example code
 
-
-
-
-
-
-
-
-
+Now let's try some of the concepts we've learned in R! The [Workshop_Notebook.qmd](r/Workshop_Notebook.qmd) file is an R Quarto notebook that you can open in R Studio. It will walk us through downloading some Landsat data from the NASA's EarthData STAC Catalog for 10 Mile Dunes in northern California to run an exploratory analysis.
 
 
 
