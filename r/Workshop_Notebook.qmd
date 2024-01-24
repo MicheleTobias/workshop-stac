@@ -22,30 +22,31 @@ In this workshop, we'll use [NASA's Earthdata](https://www.earthdata.nasa.gov/) 
 
 4.  Perform a basic analysis
 
-For our work today, we'll be working with data from [10 Mile Dunes](https://maps.app.goo.gl/8Qg3WD1xEbA4jKdZ8), a large coastal dune field in northern California. Why this area? Coastal California has many of the challenges you might face when working with satellite imagery. The one many people will encounter is cloud cover. Another is scatter from water or other irregular natural surfaces. This area also has a variety of land cover, including ocean, California coastal scrub, active sandy dunes, agriculture, and built up areas. But really, Michele just wanted to explore this area because she researches beach and dune plants. You can modify the code to work with your own area of interest.
+In this tutorial, we'll be working with data from [10 Mile Dunes](https://maps.app.goo.gl/8Qg3WD1xEbA4jKdZ8), a large coastal dune field in northern California. Why this area? Coastal California has many of the challenges you might face when working with satellite imagery. The one many people will encounter is cloud cover. Another is scatter from water or other irregular natural surfaces. This area also has a variety of land cover, including ocean, California coastal scrub, active sandy dunes, agriculture, and built up areas. But really, Michele just wanted to explore this area because she researches beach and dune plants. You can modify the code to work with your own area of interest.
 
 ## Set Up Your Project
 
 ### Configure Your Environment & Set Up Authentication
 
-There are some things we need to do to get access to NASA's Earthdata, but we only need to do these things the first time we engage with this dataset. Another way to put this is that once we do these first steps, we probably don't need to do them again.
+To get access to NASA Earthdata, you need sign up for a free Earthdata Login account: <https://urs.earthdata.nasa.gov/>
 
-To get access to NASA Earthdata, we need to do the following steps:
-
-1.  Sign up for an Earthdata Login account: <https://urs.earthdata.nasa.gov/>
+This is a one time step. Once you have an account you'll be able to access most public NASA data - through the web, with compatible applications, or with code. After today, you might need to occasionally revisit this URL to manage your account; e.g. to reset your password, or configure extra optional features.
 
 ### Install and Load Libraries
 
-First, we need to install any R libraries we want to use. Next, we need to load those libraries. You might assume that if we install the library, we want to use it, but R doesn't automatically load libraries you just installed.
+First, we need to install any R libraries we want to use. You only need to do this once per computer.
 
 ```{r}
-# Install Packages
-#install.packages(c("rstac", "terra", "httr", "RColorBrewer", "getPass", "earthdatalogin"))
+# Install Packages - only need to do this once
+install.packages(c("rstac", "terra", "RColorBrewer", "getPass", "earthdatalogin"))
+```
 
+Next, we need to load those libraries. You might assume that if we install the library, we want to use it, but R doesn't automatically load libraries you just installed.
+
+```{r}
 # Load Libraries
 library(rstac)          # interact with stac catalogs
 library(terra)          # work with raster data
-#library(httr)           # gets information from webpages
 library(RColorBrewer)   # color pallets from Color Brewer, a library of colors designed for optimized readability in cartograhy
 library(getPass)        # allows us to give the code our password without it printing to the console
 library(earthdatalogin) # let's us authenticate to access NASA data
@@ -53,7 +54,7 @@ library(earthdatalogin) # let's us authenticate to access NASA data
 
 ### Configure the GDAL Library
 
-GDAL is the library that allows your computer to read many spatial data formats and can translate one format to another (for example, you can read a shapefile into your code and save it as a geopackage thanks to GDAL). We need to change some of the settings in the way the library works for this R session. These are performance modifications for using internet files. You can read about on the [GDAL documentation](https://gdal.org/user/configoptions.html). Don't worry; it won't change how GDAL works with your other geospatial programs.
+GDAL is the library that allows your computer to read many spatial data formats and can translate one format to another. For example, you can read a shapefile into your code and save it as a geopackage thanks to GDAL. We need to change some of the settings in the way the library works for this R session. These are performance modifications for using internet files. You can read about the settings in the [GDAL documentation](https://gdal.org/user/configoptions.html). Don't worry; it won't change how GDAL works with your other geospatial programs.
 
 ```{r}
 # GDAL optimization for working with cloud-optimized data
@@ -63,7 +64,7 @@ setGDALconfig("CPL_VSIL_CURL_ALLOWED_EXTENSIONS", "TIF")
 
 ### Authenticate NASA Earthdata
 
-"Authenticate" is a fancy word meaning "log in" or "prove you should have access". We'll do this by making a function that uses your Earthdata username and password. We've set up the code to ask you for these items so you don't have to store them in code that might be shared in public repositories. But this means you'll need to pay attention and set it here or the rest of the code won't run (because you won't be authenticated).
+"Authenticate" is a fancy word meaning "log in" or "prove you should have access". We'll do this by calling a function that uses your Earthdata username and password. We've set up the code to ask you for these items so you don't have to store them in code that might be shared in public repositories. But this means you'll need to pay attention and set it here or the rest of the code won't run (because you won't be authenticated).
 
 First the code asks for our credentials.
 
@@ -71,7 +72,7 @@ First the code asks for our credentials.
 earthdata_username <- getPass("Earthdata User:")
 earthdata_password <- getPass("Earthdata Password:")
 
-# note: use the function readline() if you want to be able to see your inputs... we need to mask the instructors' credentials for the broadcast.
+# note: adding forcemask=FALSE would let you see the values as you type. We intentionally hid that for security of the presentation.
 ```
 
 Now we run the authentication function inputting our username and password:
@@ -80,17 +81,17 @@ Now we run the authentication function inputting our username and password:
 earthdatalogin::edl_netrc(username = earthdata_username, password = earthdata_password)
 ```
 
-## Search Harmonized Lansat Sentinel (HSL) Data
+## Search Harmonized Landsat Sentinel (HSL) Data
 
-First, we need to connect to the Landsat STAC catalog endpoint.
+The [Harmonized Landsat Sentinel](https://lpdaac.usgs.gov/products/hlss30v002/), aka HLS, dataset is a collaboration between NASA and USGS that uses ESA's Sentinel 2 data to fill in time gaps of the Landsat 8 satellite. This allows us to get data data every 2 to 3 days instead of the usual 8 days. Which is great when you're trying to find a day without cloud cover.
+
+To start we need to find the STAC catalog URL for HLS data. Finding the data using NASA's EarthData Search website provides use with a lot of information. <https://search.earthdata.nasa.gov/search?q=C2021957295-LPCLOUD>
+
+This told us the name of the collection, HLSS30.v2.0, and which DAAC it's hosted at, LPDAAC, whose catalog is listed on <https://cmr.earthdata.nasa.gov/stac> as LPCLOUD.
+
+Now it's time to search for some data. First, we need to connect to the Landsat STAC catalog endpoint.
 
 <https://cmr.earthdata.nasa.gov/stac/LPCLOUD>
-
-How did we find this url?
-
-Finding the data on NASA EarthData Search <https://search.earthdata.nasa.gov/search?q=C2021957295-LPCLOUD>
-
-This told us the name of the collection and which DAAC it's hosted at, LPDAAC, whose catalog is listed on <https://cmr.earthdata.nasa.gov/stac> as LPCLOUD
 
 ```{r}
 nasa_stac <- stac("https://cmr.earthdata.nasa.gov/stac/LPCLOUD")
@@ -99,8 +100,8 @@ nasa_stac <- stac("https://cmr.earthdata.nasa.gov/stac/LPCLOUD")
 Now let's define our geographic area of interest as the area that includes 10 Mile Dunes:
 
 ```{r}
-# minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
 # We need bbox defined for STAC queries
+# minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---> 10 Mile Dunes
 bbox = c( -123.824405, 39.485343, -123.748531, 39.556319)
 # Later we'll need the same bbox as a Terra extent object for reading data
 extent = ext(c(bbox[1],bbox[3],bbox[2],bbox[4]))
@@ -108,19 +109,19 @@ extent = ext(c(bbox[1],bbox[3],bbox[2],bbox[4]))
 plot(extent, col="lightblue") #ok, not that interesting, but we know it plots a bounding box
 ```
 
-Set our STAC search parameters: STAC url, collection name, bbox, time interval, and limit how many items we can find.
+Then it's time do setup our STAC search parameters: STAC URL, collection name, bbox, time interval, and limit how many items we want to find.
 
 ```{r}
 search_hls <- stac_search(
-  q = nasa_stac, # The STAC API url
+  q = nasa_stac, # The STAC API URL
   collections = "HLSS30.v2.0", # https://lpdaac.usgs.gov/products/hlss30v002/
   bbox = bbox, 
-  datetime = "2023-06-01T00:00:00Z/2023-07-30T00:00:00Z",  # A closed interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z" 
+  datetime = "2023-06-01T00:00:00Z/2023-07-30T00:00:00Z",  # A closed interval: e.g. "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z" 
   limit = 100
 )
 ```
 
-Run the search. (Note: NASA's STAC needs a "post", many other STAC servers can use "get" requests.)
+With the parameters now set we can run the search. (Note: NASA's STAC needs a "post", many other STAC servers can use "get" requests.)
 
 ```{r}
 results_hls <- post_request(search_hls)
@@ -128,13 +129,13 @@ results_hls <- post_request(search_hls)
 results_hls
 ```
 
-Inspect the first element of the results:
+Great, we have 12 results. Let's inspect the first element of the results to see what it looks like.
 
 ```{r}
 results_hls$features[[1]]
 ```
 
-And, let's look at the properties of this first element:
+And, let's look at the properties of this first item, to see what other metadata it contains.
 
 ```{r}
 results_hls$features[[1]]$properties
@@ -146,19 +147,25 @@ We can see what the cloud cover property is called in the STAC record based on t
 results_hls$features[[1]]$properties$`eo:cloud_cover`
 ```
 
-What assets are available for a given item? USGS has [more information](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions) on the HLS website. You can think of "assets" as bands of an image or different layers of information.
-
-```{r}
-names(results_hls$features[[1]]$assets)
-```
-
-Now we can filter our results to only include scenes with low cloud cover by filtering the metadata returned in our search.
+This scene only has 1% cloud cover over the whole image, that's fantastic. Now we can filter our results to only include scenes with low cloud cover by filtering the metadata returned in our search.
 
 ```{r}
 results_hls <- items_filter(results_hls, properties$`eo:cloud_cover` < 10)
 
 results_hls
 ```
+
+Now we have 4 of the 12 items with cloud cover less than 10%.
+
+So now we want to know what assets, aka files, are available for a given item. You can think of "assets" as bands of an image or different layers of information. USGS has [more information](https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions) on the HLS website about the specifics.
+
+Reading the printout above we can see:
+
+> ```         
+> - assets: B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, B8A, browse, Fmask, metadata, SAA, SZA, VAA, VZA
+> ```
+
+Now looking at the assets, there are 20 for each item, and we'll need to decide which of those we actually need to use in the analysis.
 
 # ANALYSIS Using HLS
 
@@ -171,9 +178,10 @@ Reminder: Items have assets - example: item = photo, asset = a specific band
 ```{r}
 items <- assets_select(results_hls,
                        asset_names = c(
-                         "B03", #green: 0.53 – 0.59
-                         "B8A", #NIR narrow: 0.85 – 0.88
-                         "B04"  #red: 0.64 – 0.67
+                         "B03", #green: 530 – 590 nm 
+                         "B04", #red: 640 – 670 nm
+                         "B8A" #Near-IR narrow: 850 – 880 nm
+                         
                       ))
 ```
 
@@ -187,7 +195,7 @@ urls
 
 To decide which of these items we want to download, we need to glean information from the file names in the URLs. The letter B followed by a number (or alphanumeric code) tells us the band number. Another part of the file name contains the year.
 
-We can also see that there are 3 bands per scene. To work with one scene we can filter down that url list to single STAC Item.
+We can also see that there are 3 bands per scene. To work with one scene we can filter down that URL list to single STAC item.
 
 ```{r}
 urls<-assets_url(items$features[[1]])
@@ -195,7 +203,7 @@ urls<-assets_url(items$features[[1]])
 urls
 ```
 
-First, let's configure the Green band:
+First, let's configure the Green band as a raster.
 
 (Note: `vsi=TRUE` tells Terra that the file path is a URL not a local file)
 
@@ -206,11 +214,13 @@ band_green <- rast(urls[1], vsi=TRUE)
 Now, we need to read only the extent that matches the bounding box. However there's a slight catch, we need to convert the extent to the same projection as the HLS scene before we read.
 
 ```{r}
+# reproject the extent to the HLS scene CRS.
 utm_extent <- terra::project(extent, "epsg:4326", crs(band_green))
+# Read the data from the URL for the selected extent
 band_green_crop <- crop(band_green, utm_extent)
 ```
 
-Now let's get the IR and Red bands too:
+Now let's get the IR and Red bands too.
 
 ```{r}
 band_red <- rast(urls[2], vsi=TRUE, win=utm_extent)
@@ -236,19 +246,19 @@ ndwi = normdiff(band_green_crop, band_ir)
 ndvi = normdiff(band_ir, band_red)
 ```
 
-Let's look at the histogram of NDWI to understand the output better:
+Let's look at the histogram of NDWI to understand the output better.
 
 ```{r}
 hist(ndwi, breaks = 40)
 ```
 
-Now let's look at the summary of the values in our NDWI raster:
+Now let's look at the summary of the values in our NDWI raster.
 
 ```{r}
 summary(ndwi) #<-- ok, so there's some weirdness here
 ```
 
-There is something odd going on with our values. Why is the minimum -41 and the max 85.6? Shouldn't the range of this index be \[-1,1\]? Yes, it should, but the sunlight glinting off the tops of waves in the ocean does odd things. So we'll have to filter those results out since we suspect they are not useful and not indicative of anything we're interested in.
+There is something odd going on with our values. Why is the minimum -41 and the max 85.6? Shouldn't the range of this index be \[-1,1\]? Yes, it should, but the sunlight glinting off the tops of waves in the ocean does odd things. So we'll have to filter those results out later, since we suspect they are not useful and not indicative of anything we're interested in.
 
 Let's check the Green band.
 
@@ -270,11 +280,11 @@ summary(ndvi)
 
 # PLOT HLS
 
-In this section, we'll plot the data we've downloaded and calculated. We'll combine plots and apply color palettes.
+In this section, we'll plot the data we've downloaded and calculated. We'll combine plots, apply color palettes, and filter out bad data.
 
 ## Plot NDWI
 
-Make a layout with one big figure at the top and two smaller figures below. The first figure takes up 4 cells in the matrix.
+We're to make a plot layout with one big figure at the top, NDWI, and two smaller figures below with the green and nir bands. The first figure takes up 4 cells in the matrix.
 
 We'll call three different plots to fill in the slots in our layout, using the range parameter to filter out values outside of the range of our indexes. Note that this plot looks better in R Studio rather than Quarto.
 
