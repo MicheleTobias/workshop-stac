@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>STAC Catalog Workshop</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Workshop_Notebook_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Workshop_Notebook_files/libs/quarto-html/quarto.js"></script>
+<script src="Workshop_Notebook_files/libs/quarto-html/popper.min.js"></script>
+<script src="Workshop_Notebook_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Workshop_Notebook_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Workshop_Notebook_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Workshop_Notebook_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Workshop_Notebook_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Workshop_Notebook_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Workshop_Notebook_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">STAC Catalog Workshop</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="downloading-satellite-data-from-spatiotemporal-asset-catalogs-stac" class="level1">
+<h1>Downloading Satellite Data from SpatioTemporal Asset Catalogs (STAC)</h1>
+<p>Authors:</p>
+<ul>
+<li><p>Michele Tobias, PhD - <a href="https://datalab.ucdavis.edu/">University of California Davis DataLab</a></p></li>
+<li><p>Alex Mandel, PhD - <a href="https://developmentseed.org/">Development Seed</a></p></li>
+</ul>
+<p>In this workshop, we’ll use <a href="https://www.earthdata.nasa.gov/">NASA’s Earthdata</a> repository to learn how to:</p>
+<ol type="1">
+<li><p>Get access to a STAC Catalog</p></li>
+<li><p>Search the catalog</p></li>
+<li><p>Download data from the catalog</p></li>
+<li><p>Perform a basic analysis</p></li>
+</ol>
+<section id="study-site" class="level2">
+<h2 class="anchored" data-anchor-id="study-site">Study Site</h2>
+<p>In this tutorial, we’ll be working with data from <a href="https://maps.app.goo.gl/8Qg3WD1xEbA4jKdZ8">10 Mile Dunes</a>, a large coastal dune field in northern California. Why this area? Coastal California has many of the challenges you might face when working with satellite imagery. The one many people will encounter is cloud cover. Another is scatter from water or other irregular natural surfaces. This area also has a variety of land cover, including ocean, California coastal scrub, active sandy dunes, agriculture, and built up areas. But really, Michele just wanted to explore this area because she researches beach and dune plants. You can modify the code to work with your own area of interest.</p>
+</section>
+<section id="set-up-your-project" class="level2">
+<h2 class="anchored" data-anchor-id="set-up-your-project">Set Up Your Project</h2>
+<section id="configure-your-environment-set-up-authentication" class="level3">
+<h3 class="anchored" data-anchor-id="configure-your-environment-set-up-authentication">Configure Your Environment &amp; Set Up Authentication</h3>
+<p>To get access to NASA Earthdata, you need sign up for a free Earthdata Login account: <a href="https://urs.earthdata.nasa.gov/" class="uri">https://urs.earthdata.nasa.gov/</a></p>
+<p>This is a one time step. Once you have an account you’ll be able to access most public NASA data - through the web, with compatible applications, or with code. After today, you might need to occasionally revisit this URL to manage your account; e.g.&nbsp;to reset your password, or configure extra optional features.</p>
+</section>
+<section id="install-and-load-libraries" class="level3">
+<h3 class="anchored" data-anchor-id="install-and-load-libraries">Install and Load Libraries</h3>
+<p>First, we need to install any R libraries we want to use. You only need to do this once per computer.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install Packages - only need to do this once</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages(c("rstac", "terra", "RColorBrewer", "getPass", "earthdatalogin"))</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, we need to load those libraries. You might assume that if we install the library, we want to use it, but R doesn’t automatically load libraries you just installed.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load Libraries</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rstac)          <span class="co"># interact with stac catalogs</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'rstac' was built under R version 4.3.1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(terra)          <span class="co"># work with raster data</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'terra' was built under R version 4.3.1</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>terra 1.7.55</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(RColorBrewer)   <span class="co"># color pallets from Color Brewer, a library of colors designed for optimized readability in cartograhy</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'RColorBrewer' was built under R version 4.3.1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(getPass)        <span class="co"># allows us to give the code our password without it printing to the console</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'getPass' was built under R version 4.3.1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(earthdatalogin) <span class="co"># lets us authenticate to access NASA data</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'earthdatalogin' was built under R version 4.3.2</code></pre>
+</div>
+</div>
+</section>
+<section id="configure-the-gdal-library" class="level3">
+<h3 class="anchored" data-anchor-id="configure-the-gdal-library">Configure the GDAL Library</h3>
+<p>GDAL is the library that allows your computer to read many spatial data formats and can translate one format to another. For example, you can read a shapefile into your code and save it as a geopackage thanks to GDAL. We need to change some of the settings in the way the library works for this R session. These are performance modifications for using internet files. You can read about the settings in the <a href="https://gdal.org/user/configoptions.html">GDAL documentation</a>. Don’t worry; it won’t change how GDAL works with your other geospatial programs.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># GDAL optimization for working with cloud-optimized data</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">setGDALconfig</span>(<span class="st">"GDAL_DISABLE_READDIR_ON_OPEN"</span>, <span class="st">"EMPTY_DIR"</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="fu">setGDALconfig</span>(<span class="st">"CPL_VSIL_CURL_ALLOWED_EXTENSIONS"</span>, <span class="st">"TIF"</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="authenticate-nasa-earthdata" class="level3">
+<h3 class="anchored" data-anchor-id="authenticate-nasa-earthdata">Authenticate NASA Earthdata</h3>
+<p>“Authenticate” is a fancy word meaning “log in” or “prove you should have access”. We’ll do this by calling a function that uses your Earthdata username and password. We’ve set up the code to ask you for these items so you don’t have to store them in code that might be shared in public repositories. But this means you’ll need to pay attention and set it here or the rest of the code won’t run (because you won’t be authenticated).</p>
+<p>First the code asks for our credentials.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>earthdata_username <span class="ot">&lt;-</span> <span class="fu">getPass</span>(<span class="st">"Earthdata User:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Please enter password in TK window (Alt+Tab)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>earthdata_password <span class="ot">&lt;-</span> <span class="fu">getPass</span>(<span class="st">"Earthdata Password:"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Please enter password in TK window (Alt+Tab)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># note: adding forcemask=FALSE would let you see the values as you type. We intentionally hid that for security of the presentation.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we run the authentication function inputting our username and password:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>earthdatalogin<span class="sc">::</span><span class="fu">edl_netrc</span>(<span class="at">username =</span> earthdata_username, <span class="at">password =</span> earthdata_password)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="search-harmonized-landsat-sentinel-hsl-data" class="level2">
+<h2 class="anchored" data-anchor-id="search-harmonized-landsat-sentinel-hsl-data">Search Harmonized Landsat Sentinel (HSL) Data</h2>
+<p>The <a href="https://lpdaac.usgs.gov/products/hlss30v002/">Harmonized Landsat Sentinel</a>, aka HLS, dataset is a collaboration between NASA and USGS that uses ESA’s Sentinel 2 data to fill in time gaps of the Landsat 8 satellite. This allows us to get data data every 2 to 3 days instead of the usual 8 days. Which is great when you’re trying to find a day without cloud cover.</p>
+<p>To start we need to find the STAC catalog URL for HLS data. Finding the data using NASA’s EarthData Search website provides use with a lot of information. <a href="https://search.earthdata.nasa.gov/search?q=C2021957295-LPCLOUD" class="uri">https://search.earthdata.nasa.gov/search?q=C2021957295-LPCLOUD</a></p>
+<p>This told us the name of the collection, HLSS30.v2.0, and which DAAC it’s hosted at, LPDAAC, whose catalog is listed on <a href="https://cmr.earthdata.nasa.gov/stac" class="uri">https://cmr.earthdata.nasa.gov/stac</a> as LPCLOUD.</p>
+<p>Now it’s time to search for some data. First, we need to connect to the Landsat STAC catalog endpoint.</p>
+<p><a href="https://cmr.earthdata.nasa.gov/stac/LPCLOUD" class="uri">https://cmr.earthdata.nasa.gov/stac/LPCLOUD</a></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># connect to the stac endpoint we want to query</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>nasa_stac <span class="ot">&lt;-</span> <span class="fu">stac</span>(<span class="st">"https://cmr.earthdata.nasa.gov/stac/LPCLOUD"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now let’s define our geographic area of interest as the area that includes 10 Mile Dunes:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># We need bbox defined for STAC queries</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="co"># minimum longitude, minimum latitude, maximum longitude, and maximum latitude ---&gt; 10 Mile Dunes</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>bbox <span class="ot">=</span> <span class="fu">c</span>( <span class="sc">-</span><span class="fl">123.824405</span>, <span class="fl">39.485343</span>, <span class="sc">-</span><span class="fl">123.748531</span>, <span class="fl">39.556319</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Later we'll need the same bbox as a Terra extent object for reading data</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>extent <span class="ot">=</span> <span class="fu">ext</span>(<span class="fu">c</span>(bbox[<span class="dv">1</span>],bbox[<span class="dv">3</span>],bbox[<span class="dv">2</span>],bbox[<span class="dv">4</span>]))</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(extent, <span class="at">col=</span><span class="st">"lightblue"</span>) <span class="co">#ok, this is perhaps not that interesting, but sometimes it's nice to have proof you did something correctly by plotting it</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Workshop_Notebook_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Then it’s time do setup our STAC search parameters: STAC URL, collection name, bounding box (bbox), time interval, and limit how many items we want to find.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>search_hls <span class="ot">&lt;-</span> <span class="fu">stac_search</span>(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">q =</span> nasa_stac, <span class="co"># The STAC API connection we made earlier</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">collections =</span> <span class="st">"HLSS30.v2.0"</span>, <span class="co"># https://lpdaac.usgs.gov/products/hlss30v002/</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">bbox =</span> bbox, <span class="co">#bounding box that we made eariler</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">datetime =</span> <span class="st">"2023-06-01T00:00:00Z/2023-07-30T00:00:00Z"</span>,  <span class="co"># A closed interval: e.g. "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z" </span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">limit =</span> <span class="dv">100</span> <span class="co">#limits how many results we see</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>With the parameters now set we can run the search. (Note: NASA’s STAC needs a “post”, many other STAC servers can use “get” requests.)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>results_hls <span class="ot">&lt;-</span> <span class="fu">post_request</span>(search_hls)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>results_hls</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>###STACItemCollection
+- matched feature(s): 12
+- features (12 item(s) / 0 not fetched):
+  - HLS.S30.T10SDJ.2023152T185921.v2.0
+  - HLS.S30.T10SDJ.2023157T185919.v2.0
+  - HLS.S30.T10SDJ.2023162T185921.v2.0
+  - HLS.S30.T10SDJ.2023167T185919.v2.0
+  - HLS.S30.T10SDJ.2023172T185921.v2.0
+  - HLS.S30.T10SDJ.2023177T185919.v2.0
+  - HLS.S30.T10SDJ.2023182T185921.v2.0
+  - HLS.S30.T10SDJ.2023187T185919.v2.0
+  - HLS.S30.T10SDJ.2023192T185921.v2.0
+  - HLS.S30.T10SDJ.2023197T185919.v2.0
+  - HLS.S30.T10SDJ.2023202T185921.v2.0
+  - HLS.S30.T10SDJ.2023207T185919.v2.0
+- assets: 
+B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, B8A, browse, Fmask, metadata, SAA, SZA, VAA, VZA
+- item's fields: 
+assets, bbox, collection, geometry, id, links, properties, stac_extensions, stac_version, type</code></pre>
+</div>
+</div>
+<p>Great, we have 12 results. Let’s inspect the first element of the results to see what it looks like.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>results_hls<span class="sc">$</span>features[[<span class="dv">1</span>]]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>###STACItem
+- id: HLS.S30.T10SDJ.2023152T185921.v2.0
+- collection: HLSS30.v2.0
+- bbox: xmin: -124.16763, ymin: 38.75519, xmax: -122.88607, ymax: 39.75027
+- datetime: 2023-06-01T19:13:44.387Z
+- assets: 
+B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, B8A, browse, Fmask, metadata, SAA, SZA, VAA, VZA
+- item's fields: 
+assets, bbox, collection, geometry, id, links, properties, stac_extensions, stac_version, type</code></pre>
+</div>
+</div>
+<p>And, let’s look at the properties of this first item, to see what other metadata it contains.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>results_hls<span class="sc">$</span>features[[<span class="dv">1</span>]]<span class="sc">$</span>properties</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$`eo:cloud_cover`
+[1] 1
+
+$datetime
+[1] "2023-06-01T19:13:44.387Z"
+
+$start_datetime
+[1] "2023-06-01T19:13:44.387Z"
+
+$end_datetime
+[1] "2023-06-01T19:13:44.387Z"</code></pre>
+</div>
+</div>
+<p>We can see what the cloud cover property is called in the STAC record based on this output. Let’s look at the cloud cover property, something that will be important for images in a coastal area.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>results_hls<span class="sc">$</span>features[[<span class="dv">1</span>]]<span class="sc">$</span>properties<span class="sc">$</span><span class="st">`</span><span class="at">eo:cloud_cover</span><span class="st">`</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1</code></pre>
+</div>
+</div>
+<p>This scene only has 1% cloud cover over the whole image, that’s fantastic. Now we can filter our results to only include scenes with low cloud cover by filtering the metadata returned in our search.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>results_hls <span class="ot">&lt;-</span> <span class="fu">items_filter</span>(results_hls, properties<span class="sc">$</span><span class="st">`</span><span class="at">eo:cloud_cover</span><span class="st">`</span> <span class="sc">&lt;</span> <span class="dv">10</span>)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>results_hls</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>###STACItemCollection
+- matched feature(s): 12
+- features (4 item(s) / 8 not fetched):
+  - HLS.S30.T10SDJ.2023152T185921.v2.0
+  - HLS.S30.T10SDJ.2023172T185921.v2.0
+  - HLS.S30.T10SDJ.2023202T185921.v2.0
+  - HLS.S30.T10SDJ.2023207T185919.v2.0
+- assets: 
+B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, B8A, browse, Fmask, metadata, SAA, SZA, VAA, VZA
+- item's fields: 
+assets, bbox, collection, geometry, id, links, properties, stac_extensions, stac_version, type</code></pre>
+</div>
+</div>
+<p>Now we have 4 of the 12 items with cloud cover less than 10%.</p>
+<p>So now we want to know what assets, aka files, are available for a given item. You can think of “assets” as bands of an image or different layers of information. USGS has <a href="https://lpdaac.usgs.gov/data/get-started-data/collection-overview/missions/harmonized-landsat-sentinel-2-hls-overview/#hls-naming-conventions">more information</a> on the HLS website about the specifics.</p>
+<p>Reading the printout above we can see:</p>
+<blockquote class="blockquote">
+<pre><code>- assets: B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B12, B8A, browse, Fmask, metadata, SAA, SZA, VAA, VZA</code></pre>
+</blockquote>
+<p>Now looking at the assets, there are 20 for each item, and we’ll need to decide which of those we actually need to use in the analysis.</p>
+</section>
+</section>
+<section id="analysis-using-hls" class="level1">
+<h1>ANALYSIS Using HLS</h1>
+<p>Normalized Difference Vegetation Index (NDVI) is an index commonly used to investigate vegetation health. You may already be familiar with this tool. Another similar index, Normalized Difference Water Index (NDWI), is used to understand the water content of plants or soils in remotely sensed imagery. It might seem counter-intuitive, but sandy dunes hold a lot of water. We’ll use NDWI to help us differentiate the dunes from other substrate in our images.</p>
+<p>First, we’ll set which assets we’re interested in so we don’t have to download all the assets.</p>
+<p>Reminder: Items have assets - example: item = photo, asset = a specific band</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>items <span class="ot">&lt;-</span> <span class="fu">assets_select</span>(results_hls,</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">asset_names =</span> <span class="fu">c</span>(</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"B03"</span>, <span class="co">#green: 530 – 590 nm </span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"B04"</span>, <span class="co">#red: 640 – 670 nm</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"B8A"</span> <span class="co">#Near-IR narrow: 850 – 880 nm</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>                         </span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>                      ))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we’ll get the URLs for the assets. URLs are how we’ll request the assets from the API.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>urls<span class="ot">&lt;-</span><span class="fu">assets_url</span>(items)</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>urls</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023152T185921.v2.0/HLS.S30.T10SDJ.2023152T185921.v2.0.B03.tif"
+ [2] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023172T185921.v2.0/HLS.S30.T10SDJ.2023172T185921.v2.0.B03.tif"
+ [3] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023202T185921.v2.0/HLS.S30.T10SDJ.2023202T185921.v2.0.B03.tif"
+ [4] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023207T185919.v2.0/HLS.S30.T10SDJ.2023207T185919.v2.0.B03.tif"
+ [5] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023152T185921.v2.0/HLS.S30.T10SDJ.2023152T185921.v2.0.B04.tif"
+ [6] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023172T185921.v2.0/HLS.S30.T10SDJ.2023172T185921.v2.0.B04.tif"
+ [7] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023202T185921.v2.0/HLS.S30.T10SDJ.2023202T185921.v2.0.B04.tif"
+ [8] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023207T185919.v2.0/HLS.S30.T10SDJ.2023207T185919.v2.0.B04.tif"
+ [9] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023152T185921.v2.0/HLS.S30.T10SDJ.2023152T185921.v2.0.B8A.tif"
+[10] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023172T185921.v2.0/HLS.S30.T10SDJ.2023172T185921.v2.0.B8A.tif"
+[11] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023202T185921.v2.0/HLS.S30.T10SDJ.2023202T185921.v2.0.B8A.tif"
+[12] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023207T185919.v2.0/HLS.S30.T10SDJ.2023207T185919.v2.0.B8A.tif"</code></pre>
+</div>
+</div>
+<p>To decide which of these items we want to download, we need to glean information from the file names in the URLs. The letter B followed by a number (or alphanumeric code) tells us the band number. Another part of the file name contains the year.</p>
+<p>We can also see that there are 3 bands per scene. To work with one scene we can filter down that URL list to single STAC item.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>urls<span class="ot">&lt;-</span><span class="fu">assets_url</span>(items<span class="sc">$</span>features[[<span class="dv">1</span>]])</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>urls</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023152T185921.v2.0/HLS.S30.T10SDJ.2023152T185921.v2.0.B03.tif"
+[2] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023152T185921.v2.0/HLS.S30.T10SDJ.2023152T185921.v2.0.B04.tif"
+[3] "https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/HLSS30.020/HLS.S30.T10SDJ.2023152T185921.v2.0/HLS.S30.T10SDJ.2023152T185921.v2.0.B8A.tif"</code></pre>
+</div>
+</div>
+<p>First, let’s configure the Green band as a raster.</p>
+<p>(Note: <code>vsi=TRUE</code> tells Terra that the file path is a URL not a local file)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>band_green <span class="ot">&lt;-</span> <span class="fu">rast</span>(urls[<span class="dv">1</span>], <span class="at">vsi=</span><span class="cn">TRUE</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now, we need to read only the extent that matches the bounding box. However there’s a slight catch, we need to convert the extent to the same projection as the HLS scene before we read.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># reproject the extent to the HLS scene CRS.</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>utm_extent <span class="ot">&lt;-</span> terra<span class="sc">::</span><span class="fu">project</span>(extent, <span class="st">"epsg:4326"</span>, <span class="fu">crs</span>(band_green))</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the data from the URL for the selected extent</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>band_green_crop <span class="ot">&lt;-</span> <span class="fu">crop</span>(band_green, utm_extent)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now let’s get the IR and Red bands too.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>band_red <span class="ot">&lt;-</span> <span class="fu">rast</span>(urls[<span class="dv">2</span>], <span class="at">vsi=</span><span class="cn">TRUE</span>, <span class="at">win=</span>utm_extent)</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>band_ir <span class="ot">&lt;-</span> <span class="fu">rast</span>(urls[<span class="dv">3</span>], <span class="at">vsi=</span><span class="cn">TRUE</span>, <span class="at">win=</span>utm_extent)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can calculate Normalized Difference Water Index (NDWI) as:</p>
+<p>NDWI = (Green – NIR)/(Green + NIR)</p>
+<p>We can write a function in R to calcuate any normalized difference index.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>normdiff <span class="ot">&lt;-</span> <span class="cf">function</span>(x, y) {</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  (x <span class="sc">-</span> y) <span class="sc">/</span> (x <span class="sc">+</span> y)</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We just need to know which band to submit for the x and y inputs to toggle between indexes like NDWI and NDVI (normalized difference vegetation index).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>ndwi <span class="ot">=</span> <span class="fu">normdiff</span>(band_green_crop, band_ir) </span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>ndvi <span class="ot">=</span> <span class="fu">normdiff</span>(band_ir, band_red)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Let’s look at the histogram of NDWI to understand the output better.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(ndwi, <span class="at">breaks =</span> <span class="dv">40</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Workshop_Notebook_files/figure-html/unnamed-chunk-22-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Now let’s look at the summary of the values in our NDWI raster.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ndwi) <span class="co">#&lt;-- ok, so there's some weirdness here</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     Green          
+ Min.   :-41.00000  
+ 1st Qu.: -0.70168  
+ Median : -0.23700  
+ Mean   : -0.29302  
+ 3rd Qu.:  0.01481  
+ Max.   : 85.66667  </code></pre>
+</div>
+</div>
+<p>There is something odd going on with our values. Why is the minimum -41 and the max 85.6? Shouldn’t the range of this index be [-1,1]? Yes, it should, but the sunlight glinting off the tops of waves in the ocean does odd things. So we’ll have to filter those results out later, since we suspect they are not useful and not indicative of anything we’re interested in.</p>
+<p>Let’s check the Green band.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(band_green_crop, <span class="at">breaks =</span> <span class="dv">40</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Workshop_Notebook_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Something similar is going on here - do you see the long tail?</p>
+<p>NDVI should also have some issues given what we’ve already seen, so let’s look.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(ndvi, <span class="at">breaks =</span> <span class="dv">40</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Workshop_Notebook_files/figure-html/unnamed-chunk-25-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(ndvi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   NIR_Narrow        
+ Min.   :-101.00000  
+ 1st Qu.:   0.02634  
+ Median :   0.20213  
+ Mean   :       Inf  
+ 3rd Qu.:   0.73665  
+ Max.   :       Inf  </code></pre>
+</div>
+</div>
+</section>
+<section id="plot-hls" class="level1">
+<h1>PLOT HLS</h1>
+<p>In this section, we’ll plot the data we’ve downloaded and calculated. We’ll combine plots, apply color palettes, and filter out bad data.</p>
+<section id="plot-ndwi" class="level2">
+<h2 class="anchored" data-anchor-id="plot-ndwi">Plot NDWI</h2>
+<p>We’re to make a plot layout with one big figure at the top, NDWI, and two smaller figures below with the green and nir bands. The first figure takes up 4 cells in the matrix.</p>
+<p>We’ll call three different plots to fill in the slots in our layout, using the range parameter to filter out values outside of the range of our indexes. Note that this plot looks better in R Studio rather than Quarto.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">layout</span>(<span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>), <span class="at">ncol=</span><span class="dv">2</span>, <span class="at">nrow=</span><span class="dv">3</span>, <span class="at">byrow=</span><span class="cn">TRUE</span>))</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 1</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(ndwi, <span class="at">main=</span><span class="st">"NDWI"</span>, <span class="at">range=</span><span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>,<span class="dv">1</span>), <span class="at">col=</span><span class="fu">brewer.pal</span>(<span class="at">name=</span><span class="st">'Blues'</span>, <span class="at">n=</span><span class="dv">9</span>)) <span class="co"># the range parameter limits the plot to just values in the interval you give - good to filtering out outliers (which happen especially over the ocean)</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(band_green_crop, <span class="at">main =</span> <span class="st">"Green"</span>, <span class="at">col=</span><span class="fu">brewer.pal</span>(<span class="at">name=</span><span class="st">'Greens'</span>, <span class="at">n=</span><span class="dv">9</span>))</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 3</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(band_ir, <span class="at">main =</span> <span class="st">"IR"</span>, <span class="at">col=</span><span class="fu">brewer.pal</span>(<span class="at">name=</span><span class="st">'YlOrRd'</span>, <span class="at">n=</span><span class="dv">9</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Workshop_Notebook_files/figure-html/unnamed-chunk-27-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Do you see the darker blue areas on the land? Those areas are the dune field. They stand out easily from the other soil types surrounding them.</p>
+<p>We’ll do a similar process for the NDVI analysis:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot NDVI</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">layout</span>(<span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">3</span>), <span class="at">ncol=</span><span class="dv">2</span>, <span class="at">nrow=</span><span class="dv">3</span>, <span class="at">byrow=</span><span class="cn">TRUE</span>))</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(ndvi, <span class="at">main=</span><span class="st">"NDVI"</span>, <span class="at">range=</span><span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>,<span class="dv">1</span>), <span class="at">col=</span><span class="fu">brewer.pal</span>(<span class="at">name=</span><span class="st">'Greens'</span>, <span class="at">n=</span><span class="dv">9</span>))</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 2</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(band_red, <span class="at">main =</span> <span class="st">"Red"</span>, <span class="at">col=</span><span class="fu">brewer.pal</span>(<span class="at">name=</span><span class="st">'YlOrRd'</span>, <span class="at">n=</span><span class="dv">9</span>))</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3</span></span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(band_ir, <span class="at">main =</span> <span class="st">"IR"</span>, <span class="at">col=</span><span class="fu">brewer.pal</span>(<span class="at">name=</span><span class="st">'YlOrRd'</span>, <span class="at">n=</span><span class="dv">9</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Workshop_Notebook_files/figure-html/unnamed-chunk-28-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>The dunes don’t have a lot of green vegetation, so they look lighter than the surrounding areas. Beach and dune vegetation tend to be more silver or gray in color to reflect excess light, like many Mediterranean plant species growing in harsh condition. However, this means they have reflectance properties more similar to sand than plants so even when vegetation is present, it’s hard to find with NDVI.</p>
+</section>
+<section id="citations-further-reaading" class="level2">
+<h2 class="anchored" data-anchor-id="citations-further-reaading">Citations &amp; Further Reaading</h2>
+<p><a href="https://brazil-data-cube.github.io/rstac/">rstac Example</a></p>
+<p><a href="https://brazil-data-cube.github.io/rstac/reference/index.html">rstac Documentation</a></p>
+<p><a href="https://r-spatial.org/r/2021/04/23/cloud-based-cubes.html">r-spatial STAC</a></p>
+<p><a href="https://stacspec.org/en/tutorials/2-using-rstac-and-cql2-to-query-stac-api/">stac spec tutorial on querying</a></p>
+<p><a href="https://stacspec.org/en/tutorials/1-download-data-using-r/">stac spec tutorial on downloading data</a></p>
+<p><a href="https://lpdaac.usgs.gov/resources/e-learning/getting-started-with-cloud-native-harmonized-landsat-sentinel-2-hls-data-in-r/">Getting Started with Cloud-Native Harmonized Landsat Sentinel-2 (HLS) Data in R</a></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
