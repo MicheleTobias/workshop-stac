@@ -5,7 +5,7 @@ Authors:
 * Michele Tobias, PhD - [University of California Davis DataLab](https://datalab.ucdavis.edu/)
 * Alex Mandel, PhD - [Development Seed](https://developmentseed.org/)
 
-last update: 2023-12-05
+last update: 2024-01-24
 
 
 
@@ -19,7 +19,7 @@ You may already be familiar with online catalogs like [USGS EarthExplorer](https
 
 Using a catalog lets you: 
 - update or modify your query and easily run it again
-- filter based on metadata - you can access all of the metadat,not just what the web designer decided to include
+- filter based on metadata - you can access all of the metadata, not just what the web designer decided to include
 - increase the reproducability (see also [FAIR](https://www.go-fair.org/fair-principles/)) of your project because the code documents what you did
 - Reduce the amount of data you need to download, manage, and store. You can always download the data again so you can delegate the storage to the organization that produced the data.
 - (we won't cover this today but...) move your computation closer to the data. (e.g if the data is on AWS you could run your compute on AWS) - i.e. keep your code and the data together in the cloud
@@ -46,7 +46,7 @@ Learn more: https://stacspec.org/en/tutorials/intro-to-stac/
 
 ### Cloud Optimized GeoTIFF (COG)
 
-Cloud Optimized GeoTIFF (COG) is a common file format stored in a STAC catalog. The GeoTiff format adds spatial reference metadata to the TIFF image foramt allowing you to store regularly gridded data, aka raster data, that is referenced to the earth. This lets you load data in geospatial software and know where in the world the data is and how much ground each pixel represents. 
+Cloud Optimized GeoTIFF (COG) is a common file format stored in a STAC catalog. The GeoTiff format adds spatial reference metadata to the TIFF image format allowing you to store regularly gridded data, aka raster data, that is referenced to the earth. This lets you load data in geospatial software and know where in the world the data is and how much ground each pixel represents. 
 
 What does "Cloud Optimized" mean? Why is this helpful?
 
@@ -55,11 +55,27 @@ The data inside the file is organized to allow easier and faster access to porti
 Even more information: [Cloud-Optimized Geospatial Formats Guide](https://guide.cloudnativegeo.org/) 
 
 
+
+
 ### Interacting with a STAC Catalog Through an API
 
 An Application Programming Interface (API) is a set of commands that a service knows how to respond to. You can think of it just like Library of Functions in programming. Each Function takes some set of required and optional arguments and then returns results. Web APIs typically follow a similar structure: they have a base URL (the website you connect to) followed by arguments (or parameters) that tell the website what information you want to know. Arguments might indicate which endpoint (think of this as a table or databases of data) you want to search, maybe a date range, or how much cloud cover is acceptable. Each API endpoint will have specific information you can ask for. You might think of it like a table with columns.
 
-Let's look at some examples from the Microsoft Pllanetary Computer. You can open the links below in a web browser. The response will be text in GeoJSON format. It's note necessarily very easy to read, but you can if you want.
+```
+**You Already Use APIs!**
+
+You already use an API. Every time you search with Google (or any search engine for that matter), you're using a web interface to build an API query. If you type "STAC Catalog" into Google, it will build the following URL (with some extra stuff at the end that isn't required):
+
+https://www.google.com/search?q=STAC+Catalog
+
+- Base URL = google.com
+- Endpoint = search
+- Start of the parameters = ?
+- Search Parameters = q (short for "query")
+- String to search for = STAC+Catalog (+ represents the space we would type in the search box and also indicates an "and" query [as opposed to an "or" query])
+```
+
+Let's look at some examples from the Microsoft Planetary Computer. You can open the links below in a web browser. The response will be text in GeoJSON format. It's note necessarily very easy to read, but you can if you want.
 
 List collections in the Catalog by connecting to the collections endpoint: https://planetarycomputer.microsoft.com/api/stac/v1/collections
 
