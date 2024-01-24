@@ -12,7 +12,7 @@ Authors:
 
 -   Alex Mandel, PhD - [Development Seed](https://developmentseed.org/)
 
-In this workshop, we'll use the [NASA's Earthdata](https://www.earthdata.nasa.gov/) repository to learn how to:
+In this workshop, we'll use [NASA's Earthdata](https://www.earthdata.nasa.gov/) repository to learn how to:
 
 1.  Get access to a STAC Catalog
 
@@ -28,7 +28,7 @@ In this tutorial, we'll be working with data from [10 Mile Dunes](https://maps.a
 
 ### Configure Your Environment & Set Up Authentication
 
-To get access to NASA Earthdata, sign up for an Earthdata Login account: <https://urs.earthdata.nasa.gov/>
+To get access to NASA Earthdata, you need sign up for a free Earthdata Login account: <https://urs.earthdata.nasa.gov/>
 
 This is a one time step. Once you have an account you'll be able to access most public NASA data - through the web, with compatible applications, or with code. After today, you might need to occasionally revisit this URL to manage your account; e.g. to reset your password, or configure extra optional features.
 
