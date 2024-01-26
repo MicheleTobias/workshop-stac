@@ -83,7 +83,7 @@ Now we run the authentication function inputting our username and password:
 earthdatalogin::edl_netrc(username = earthdata_username, password = earthdata_password)
 ```
 
-## Search Harmonized Landsat Sentinel (HSL) Data
+## Search Harmonized Landsat Sentinel (HLS) Data
 
 The [Harmonized Landsat Sentinel](https://lpdaac.usgs.gov/products/hlss30v002/), aka HLS, dataset is a collaboration between NASA and USGS that uses ESA's Sentinel 2 data to fill in time gaps of the Landsat 8 satellite. This allows us to get data data every 2 to 3 days instead of the usual 8 days. Which is great when you're trying to find a day without cloud cover.
 
