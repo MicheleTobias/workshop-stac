@@ -6,7 +6,7 @@ This repository contains notes and code to support a workshop on STAC Catalogs.
 
 [Reader](STAC_Workshop.md) - an introduction to STAC and the concepts you'll need to understand the script
 
-[Quarto Notebook](Workshop_Notebook.qmd) - explanations of the process in markdown blocks interspersed with executable code blocks to illustrate the process
+[Quarto Notebook](r/Workshop_Notebook.qmd) - explanations of the process in markdown blocks interspersed with executable code blocks to illustrate the process
 
 [Code](r/exploration.R) - the same code as the quarto file, but as an executable script without markdown blocks
 
