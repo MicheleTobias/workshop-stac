@@ -79,6 +79,8 @@ search_hls <- stac_search(
 
 ??? Combine search with weather data ???
 
+rnoaa package provides R support for the NOAA API
+
 ??? Maybe we do a time series within the year first?
 
 ```{r}
