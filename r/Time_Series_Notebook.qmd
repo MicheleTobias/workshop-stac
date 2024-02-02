@@ -9,7 +9,9 @@ editor: visual
 
 This notebook will explore doing a time series analysis with HLS data for 10 Mile Dunes in northern California.
 
-### Install and Load Libraries
+### Set Up
+
+#### Libraries
 
 First, we need to install any R libraries we want to use. You only need to do this once per computer.
 
@@ -29,7 +31,24 @@ library(getPass)        # allows us to give the code our password without it pri
 library(earthdatalogin) # lets us authenticate to access NASA data
 ```
 
-### 
+#### Authenticate and connect to the NASA Earth Data STAC Catalog
+
+Store your user name and password in the R session but not in your code:
+
+```{r}
+earthdata_username <- getPass("Earthdata User:")
+earthdata_password <- getPass("Earthdata Password:")
+```
+
+Now we run the authentication function inputting our username and password:
+
+```{r}
+earthdatalogin::edl_netrc(
+  username = earthdata_username, 
+  password = earthdata_password)
+```
+
+## Search HLS
 
 ```{r}
 1 + 1
