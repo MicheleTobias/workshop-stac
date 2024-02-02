@@ -1,0 +1,23 @@
+---
+title: "Time Series with HLS"
+author: "Michele Tobias, PhD"
+format: html
+editor: visual
+---
+
+## Time Series with HLS & STAC Catalogs
+
+This notebook will explore doing a time series analysis with HLS data for 10 Mile Dunes in northern California.
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
