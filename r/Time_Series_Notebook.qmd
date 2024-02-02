@@ -9,6 +9,28 @@ editor: visual
 
 This notebook will explore doing a time series analysis with HLS data for 10 Mile Dunes in northern California.
 
+### Install and Load Libraries
+
+First, we need to install any R libraries we want to use. You only need to do this once per computer.
+
+```{r}
+# Install Packages - only need to do this once 
+install.packages(c("rstac", "terra", "RColorBrewer", "getPass", "earthdatalogin"))
+```
+
+Next, we need to load those libraries. You might assume that if we install the library, we want to use it, but R doesn't automatically load libraries you just installed.
+
+```{r}
+# Load Libraries 
+library(rstac)          # interact with stac catalogs 
+library(terra)          # work with raster data 
+library(RColorBrewer)   # color pallets from Color Brewer, a library of colors designed for optimized readability in cartograhy 
+library(getPass)        # allows us to give the code our password without it printing to the console 
+library(earthdatalogin) # lets us authenticate to access NASA data
+```
+
+### 
+
 ```{r}
 1 + 1
 ```
